@@ -10,7 +10,6 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     tailwind.config = {
@@ -76,6 +75,7 @@
 
       <!-- أزرار التحكم والإشعارات وتسجيل الدخول -->
       <div class="flex flex-wrap items-center gap-2">
+        <!-- قائمة الإشعارات العلوية -->
         <div id="notifications-wrapper" class="reviewer-only hidden relative">
           <button onclick="toggleNotificationsMenu()" class="relative bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2.5 rounded-xl transition flex items-center gap-1.5" title="إشعارات المهام المطلوبة">
             <span class="text-base">🔔</span>
@@ -118,43 +118,81 @@
         <button onclick="syncFromCloud(true)" class="edit-only hidden bg-sky-600 hover:bg-sky-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
           <span>🔄</span> تحديث
         </button>
-        <button onclick="exportToExcel()" class="edit-only hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
-          <span>📊</span> Excel
-        </button>
+        <!-- فتح نفس ملف الإكسل الموحد على Google Sheets -->
+        <a href="https://docs.google.com/spreadsheets/d/1c_AJlurGTb2FXFfnyjQzNj3gtuBd1brF2O5dLJGyS1c/edit?gid=1001#gid=1001" target="_blank" class="edit-only hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
+          <span>📊</span> ملف قاعدة البيانات (Excel)
+        </a>
         <button onclick="printReport('all')" class="edit-only hidden bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition">
           <span>🖨️</span> طباعة
         </button>
       </div>
     </div>
 
-    <!-- شريط التنقل -->
+    <!-- الشريط العلوي المبسط (القائمة الرئيسية + زر القائمة الجانبية المنسدلة) -->
     <nav class="bg-black/20 border-t border-white/10">
-      <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto gap-1 py-2 text-sm font-bold">
-        <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-btn px-4 py-2 rounded-lg bg-white text-ghayth-dark shadow transition whitespace-nowrap">
-          🏠 لوحة القيادة والتحليل
-        </button>
-        <button onclick="switchTab('volunteers')" id="tab-volunteers" class="nav-btn px-4 py-2 rounded-lg text-teal-100 hover:bg-white/10 transition whitespace-nowrap">
-          👥 سجل الكادر والمتطوعين والخريطة
-        </button>
-        <button onclick="switchTab('orgchart')" id="tab-orgchart" class="nav-btn px-4 py-2 rounded-lg text-teal-100 hover:bg-white/10 transition whitespace-nowrap">
-          🏛️ الهيكل التنظيمي ومصفوفة المهام
-        </button>
-        <button onclick="switchTab('initiatives')" id="tab-initiatives" class="nav-btn px-4 py-2 rounded-lg text-teal-100 hover:bg-white/10 transition whitespace-nowrap">
-          🚀 المبادرات وساعات التطوع
-        </button>
-        <button onclick="switchTab('portal')" id="tab-portal" class="logged-in-only hidden nav-btn px-4 py-2 rounded-lg text-emerald-200 hover:bg-white/10 transition whitespace-nowrap">
-          🙋‍♂️ بوابة المتطوع وملفي الشخصي
-        </button>
-        <button onclick="switchTab('requests')" id="tab-requests" class="reviewer-only hidden nav-btn px-4 py-2 rounded-lg text-amber-200 hover:bg-white/10 transition whitespace-nowrap flex items-center gap-1.5">
-          <span>📥 طلبات التطوع والساعات</span>
-          <span id="pending-requests-badge" class="hidden bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full">0</span>
-        </button>
-        <button onclick="switchTab('permissions')" id="tab-permissions" class="admin-only hidden nav-btn px-4 py-2 rounded-lg text-amber-300 hover:bg-white/10 transition whitespace-nowrap">
-          🔐 إدارة الصلاحيات والمشرفين
-        </button>
+      <div class="max-w-7xl mx-auto px-4 flex items-center justify-between py-2 text-sm font-bold">
+        <div class="flex items-center gap-2">
+          <button onclick="toggleSidebarMenu()" class="bg-white/15 hover:bg-white/25 border border-white/30 text-white px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+            <span class="text-base">☰</span>
+            <span>القائمة والأقسام</span>
+          </button>
+          <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-btn px-4 py-2 rounded-lg bg-white text-ghayth-dark shadow transition whitespace-nowrap">
+            🏠 الرئيسية ولوحة القيادة
+          </button>
+          <button onclick="switchTab('portal')" id="tab-portal" class="logged-in-only hidden nav-btn px-4 py-2 rounded-lg text-emerald-200 hover:bg-white/10 transition whitespace-nowrap">
+            🙋‍♂️ بوابة المتطوع وملفي الشخصي
+          </button>
+        </div>
+
+        <div class="text-xs text-teal-100 hidden md:block" id="current-section-indicator">
+          القسم الحالي: لوحة القيادة والتحليل
+        </div>
       </div>
     </nav>
   </header>
+
+  <!-- القائمة الجانبية المنسدلة (Sidebar Drawer) -->
+  <div id="sidebar-backdrop" onclick="toggleSidebarMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden z-40 no-print"></div>
+  <aside id="sidebar-drawer" class="fixed top-0 right-0 h-full w-72 bg-white shadow-2xl border-l border-slate-200 transform translate-x-full transition-transform duration-300 z-50 flex flex-col justify-between no-print">
+    <div>
+      <div class="bg-ghayth-dark text-white p-4 flex items-center justify-between">
+        <div>
+          <p class="font-extrabold text-sm">أقسام المنصة الإدارية</p>
+          <p class="text-[11px] text-teal-200">جمعية غيث لأجل الإنسانية</p>
+        </div>
+        <button onclick="toggleSidebarMenu()" class="text-white/80 hover:text-white text-lg font-bold px-2">✕</button>
+      </div>
+
+      <div class="p-3 space-y-1.5 text-sm font-bold">
+        <button onclick="switchTab('dashboard'); toggleSidebarMenu();" id="side-dashboard" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl bg-teal-50 text-ghayth-dark flex items-center gap-2.5 transition">
+          <span>🏠</span> <span>لوحة القيادة والتحليل الذكي</span>
+        </button>
+        <button onclick="switchTab('volunteers'); toggleSidebarMenu();" id="side-volunteers" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+          <span>👥</span> <span>سجل الكادر والمتطوعين والخريطة</span>
+        </button>
+        <button onclick="switchTab('orgchart'); toggleSidebarMenu();" id="side-orgchart" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+          <span>🏛️</span> <span>الهيكل التنظيمي ومصفوفة المهام</span>
+        </button>
+        <button onclick="switchTab('initiatives'); toggleSidebarMenu();" id="side-initiatives" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+          <span>🚀</span> <span>المبادرات وساعات التطوع</span>
+        </button>
+        <button onclick="switchTab('portal'); toggleSidebarMenu();" id="side-portal" class="logged-in-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-emerald-800 hover:bg-emerald-50 flex items-center gap-2.5 transition">
+          <span>🙋‍♂️</span> <span>بوابة المتطوع وملفي الشخصي</span>
+        </button>
+        <button onclick="switchTab('requests'); toggleSidebarMenu();" id="side-requests" class="reviewer-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-amber-800 hover:bg-amber-50 flex items-center justify-between transition">
+          <span class="flex items-center gap-2.5"><span>📥</span> <span>الطلبات والشهادات</span></span>
+          <span id="pending-requests-badge" class="hidden bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full">0</span>
+        </button>
+        <button onclick="switchTab('permissions'); toggleSidebarMenu();" id="side-permissions" class="admin-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-purple-800 hover:bg-purple-50 flex items-center gap-2.5 transition">
+          <span>🔐</span> <span>إدارة الصلاحيات والمشرفين</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="p-4 border-t bg-slate-50 text-[11px] text-slate-500">
+      قاعدة البيانات موحدة ومتزامنة تلقائياً مع ملف Google Sheets المعتمد للجمعية.
+    </div>
+  </aside>
 
   <!-- شريط تنبيه للزوار -->
   <div id="readonly-banner" class="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs py-2 px-4 text-center no-print">
@@ -243,7 +281,7 @@
             </ul>
           </div>
           <div class="mt-5 p-3.5 rounded-xl bg-teal-50 border border-teal-100 text-xs text-teal-900 leading-relaxed">
-            <strong>مرتبط سحابياً:</strong> كافة البيانات متزامنة مباشرة مع ملف <em>قاعدة بيانات التطوع - جمعية غيث لأجل الإنسانية</em> على Google Sheets.
+            <strong>قاعدة بيانات واحدة:</strong> كافة التحديثات والطلبات والشهادات تُحفظ مباشرة في ملف <em>قاعدة بيانات التطوع - جمعية غيث لأجل الإنسانية</em> على Google Sheets.
           </div>
         </div>
       </div>
@@ -254,7 +292,7 @@
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-extrabold text-ghayth-dark">سجل الكادر الإداري والتنفيذي والمتطوعين</h2>
-          <p class="text-xs text-slate-500 mt-0.5">يعرض كافة المتطوعين المقبولين والفعالين، خريطة انتشارهم، ونظام التزامهم ومهامهم</p>
+          <p class="text-xs text-slate-500 mt-0.5">يعرض كافة المتطوعين المقبولين والفعالين، خريطة انتشارهم، نسبة تفرغهم، ومهامهم</p>
         </div>
         <button onclick="openMemberModal()" class="edit-only hidden bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow flex items-center gap-2 transition">
           <span>➕</span> إضافة مهام وظيفية للمتطوع
@@ -307,7 +345,7 @@
       <div id="org-tree-container" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 overflow-x-auto"></div>
 
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-        <h3 class="text-lg font-extrabold text-ghayth-dark mb-3">📑 مصفوفة المهام المتعددة والالتزام للكادر المُكلّف</h3>
+        <h3 class="text-lg font-extrabold text-ghayth-dark mb-3">📑 مصفوفة المهام المتعددة ونسبة التفرغ للكادر المُكلّف</h3>
         <div class="overflow-x-auto">
           <table class="w-full text-sm text-right border-collapse">
             <thead>
@@ -315,7 +353,7 @@
                 <th class="p-3 rounded-tr-xl">الاسم الكامل</th>
                 <th class="p-3">المهمة / الصفة الأولى</th>
                 <th class="p-3">المهام الإضافية (تعدد الأدوار)</th>
-                <th class="p-3">نوع الالتزام</th>
+                <th class="p-3">نسبة التفرغ</th>
                 <th class="p-3">المحافظة</th>
                 <th class="p-3 rounded-tl-xl edit-only hidden">إجراء</th>
               </tr>
@@ -331,10 +369,10 @@
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-extrabold text-ghayth-dark">المبادرات والمشاريع التطوعية</h2>
-          <p class="text-xs text-slate-500 mt-0.5">متابعة فرق العمل الميدانية، الشركاء، وساعات التطوع المنجزة</p>
+          <p class="text-xs text-slate-500 mt-0.5">متابعة فرق العمل الميدانية، الشركاء، ودعوة المتطوعين عبر البريد الإلكتروني عند إطلاق أي مبادرة</p>
         </div>
         <button onclick="openInitiativeModal()" class="edit-only hidden bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow flex items-center gap-2 transition">
-          <span>➕</span> إضافة مبادرة جديدة
+          <span>➕</span> إضافة مبادرة وإشعار المتطوعين
         </button>
       </div>
 
@@ -346,14 +384,14 @@
       <div id="portal-content-container"></div>
     </section>
 
-    <!-- 6. مراجعة طلبات المتطوعين -->
+    <!-- 6. مراجعة طلبات المتطوعين والساعات والشهادات -->
     <section id="view-requests" class="hidden space-y-6">
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <div class="border-b pb-4 mb-5">
           <h2 class="text-xl font-extrabold text-ghayth-dark flex items-center gap-2">
-            <span>📥</span> مركز مراجعة طلبات التطوع واعتماد الساعات
+            <span>📥</span> مركز مراجعة طلبات التطوع والساعات والشهادات
           </h2>
-          <p class="text-xs text-slate-500 mt-1">يمكنك مراجعة الطلبات وقبولها أو رفضها مع وضع ملاحظاتك، كما يمكنك تعديل قرار أي طلب سابق أو حذفه في أي وقت.</p>
+          <p class="text-xs text-slate-500 mt-1">مراجعة طلبات الانضمام، اعتماد ساعات التطوع، والموافقة على طلبات إصدار شهادات التطوع الرسمية للمتطوعين.</p>
         </div>
         <div id="requests-list-container" class="space-y-4"></div>
       </div>
@@ -392,7 +430,7 @@
             <span class="text-xs font-extrabold text-ghayth-dark">الصلاحيات المجزأة المخصصة لهذا المشرف:</span>
             <label class="inline-flex items-center gap-2 text-xs font-bold cursor-pointer">
               <input type="checkbox" id="perm-can-hours" checked class="w-4 h-4 accent-ghayth-teal" />
-              <span>⏱️ قبول واعتماد طلبات ساعات التطوع</span>
+              <span>⏱️ اعتماد طلبات الساعات والشهادات</span>
             </label>
             <label class="inline-flex items-center gap-2 text-xs font-bold cursor-pointer">
               <input type="checkbox" id="perm-can-join" checked class="w-4 h-4 accent-ghayth-teal" />
@@ -445,7 +483,7 @@
         <div>
           <label class="block font-bold text-xs mb-1">القرار الإداري *</label>
           <select id="rev-decision" onchange="onChangeReviewDecision()" class="w-full border bg-white rounded-xl px-3 py-2 font-bold">
-            <option value="approved">✅ قبول واعتماد الطلب وترحيله للسجل</option>
+            <option value="approved">✅ قبول واعتماد الطلب</option>
             <option value="rejected">❌ رفض الطلب</option>
             <option value="pending">⏳ إرجاع إلى قيد المراجعة</option>
           </select>
@@ -453,28 +491,27 @@
 
         <div id="rev-commitment-box" class="hidden grid sm:grid-cols-2 gap-3 bg-teal-50/60 p-3 rounded-xl border border-teal-200">
           <div>
-            <label class="block font-bold text-xs mb-1">نظام التزام المتطوع</label>
+            <label class="block font-bold text-xs mb-1">نوع التفرغ والالتزام</label>
             <select id="rev-commitment" onchange="toggleRevCommitmentDays()" class="w-full border bg-white rounded-lg px-2.5 py-1.5 text-xs font-bold">
-              <option value="partial">ملتزم بشكل جزئي</option>
-              <option value="full">ملتزم بشكل كامل</option>
+              <option value="partial">متفرغ جزئي (أيام وأوقات محددة)</option>
+              <option value="full">متفرغ (كامل أيام الأسبوع بالدوام الرسمي)</option>
             </select>
           </div>
           <div id="rev-days-wrapper">
             <label class="block font-bold text-xs mb-1">أيام الالتزام أسبوعياً</label>
             <select id="rev-commitment-days" class="w-full border bg-white rounded-lg px-2.5 py-1.5 text-xs font-bold">
-              <option value="1">يوم واحد</option>
-              <option value="2" selected>يومان</option>
-              <option value="3">3 أيام</option>
-              <option value="4">4 أيام</option>
-              <option value="5">5 أيام</option>
-              <option value="6">6 أيام</option>
+              <option value="1">يوم واحد (20%)</option>
+              <option value="2" selected>يومان (40%)</option>
+              <option value="3">3 أيام (60%)</option>
+              <option value="4">4 أيام (80%)</option>
+              <option value="5">5 أيام (100%)</option>
             </select>
           </div>
         </div>
 
         <div>
           <label class="block font-bold text-xs mb-1">ملاحظات المدير / المشرف (تُحفظ في السجل وتظهر للمتطوع):</label>
-          <textarea id="rev-admin-notes" rows="3" placeholder="اكتب ملاحظاتك أو توجيهاتك للمتطوع حول القبول أو الساعات المعتمدة..." class="w-full border rounded-xl px-3 py-2 text-xs"></textarea>
+          <textarea id="rev-admin-notes" rows="3" placeholder="اكتب ملاحظاتك أو توجيهاتك للمتطوع..." class="w-full border rounded-xl px-3 py-2 text-xs"></textarea>
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t">
@@ -577,21 +614,20 @@
 
         <div class="grid sm:grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
           <div>
-            <label class="block font-bold text-xs mb-1">نظام الالتزام مع الجمعية *</label>
+            <label class="block font-bold text-xs mb-1">نوع التفرغ والالتزام *</label>
             <select id="m-commitment" onchange="toggleCommitmentDays()" class="w-full border bg-white rounded-xl px-3 py-2 font-bold">
-              <option value="full">ملتزم بشكل كامل (دوام / تفرغ كامل)</option>
-              <option value="partial">ملتزم بشكل جزئي</option>
+              <option value="full">متفرغ (كامل أيام الأسبوع بالدوام الرسمي - 100%)</option>
+              <option value="partial">متفرغ جزئي (أيام وأوقات محددة)</option>
             </select>
           </div>
           <div id="m-commitment-days-box" class="hidden">
             <label class="block font-bold text-xs mb-1">عدد أيام الالتزام في الأسبوع *</label>
             <select id="m-commitment-days" class="w-full border bg-white rounded-xl px-3 py-2 font-bold">
-              <option value="1">يوم واحد في الأسبوع</option>
-              <option value="2">يومان في الأسبوع</option>
-              <option value="3" selected>3 أيام في الأسبوع</option>
-              <option value="4">4 أيام في الأسبوع</option>
-              <option value="5">5 أيام في الأسبوع</option>
-              <option value="6">6 أيام في الأسبوع</option>
+              <option value="1">يوم واحد في الأسبوع (20%)</option>
+              <option value="2">يومان في الأسبوع (40%)</option>
+              <option value="3" selected>3 أيام في الأسبوع (60%)</option>
+              <option value="4">4 أيام في الأسبوع (80%)</option>
+              <option value="5">5 أيام في الأسبوع (100%)</option>
             </select>
           </div>
         </div>
@@ -639,35 +675,35 @@
     </div>
   </div>
 
-  <!-- نافذة إضافة مبادرة -->
+  <!-- نافذة إضافة مبادرة مع خيار تحديد الفئات المستهدفة لإرسال البريد الإلكتروني -->
   <div id="initiative-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+    <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
       <div class="flex justify-between items-center border-b pb-3 mb-4">
-        <h3 class="text-lg font-extrabold text-ghayth-dark">إضافة مبادرة أو مشروع جديد</h3>
+        <h3 class="text-lg font-extrabold text-ghayth-dark">🚀 إضافة مبادرة جديدة وإشعار المتطوعين</h3>
         <button onclick="closeInitiativeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
       </div>
-      <form onsubmit="saveInitiative(event)" class="space-y-3 text-sm">
+      <form onsubmit="saveInitiative(event)" class="space-y-3.5 text-sm">
         <div>
           <label class="block font-bold mb-1">اسم المبادرة / المشروع *</label>
           <input type="text" id="i-title" required class="w-full border rounded-xl px-3 py-2" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-bold mb-1">المنسق المسؤول</label>
+            <label class="block font-bold mb-1">المنسق المسؤول *</label>
             <input type="text" id="i-lead" required class="w-full border rounded-xl px-3 py-2" />
           </div>
           <div>
-            <label class="block font-bold mb-1">المحافظة / الموقع</label>
+            <label class="block font-bold mb-1">المحافظة / الموقع *</label>
             <input type="text" id="i-location" required class="w-full border rounded-xl px-3 py-2" value="إدلب" />
           </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block font-bold mb-1">عدد المتطوعين</label>
+            <label class="block font-bold mb-1">عدد المتطوعين المستهدف</label>
             <input type="number" id="i-volunteers" min="1" value="15" class="w-full border rounded-xl px-3 py-2" />
           </div>
           <div>
-            <label class="block font-bold mb-1">إجمالي الساعات</label>
+            <label class="block font-bold mb-1">إجمالي الساعات المتوقعة</label>
             <input type="number" id="i-hours" min="1" value="120" class="w-full border rounded-xl px-3 py-2" />
           </div>
         </div>
@@ -676,12 +712,50 @@
           <input type="text" id="i-partners" class="w-full border rounded-xl px-3 py-2" />
         </div>
         <div>
-          <label class="block font-bold mb-1">وصف المبادرة وأهدافها</label>
-          <textarea id="i-desc" rows="2" class="w-full border rounded-xl px-3 py-2"></textarea>
+          <label class="block font-bold mb-1">وصف المبادرة وأهدافها *</label>
+          <textarea id="i-desc" rows="2" required class="w-full border rounded-xl px-3 py-2"></textarea>
         </div>
+
+        <!-- خيار تحديد فئات المتطوعين لإرسال دعوة المشاركة عبر البريد الإلكتروني -->
+        <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-extrabold text-amber-950">📧 الفئات التي ستصلها دعوة المشاركة عبر البريد الإلكتروني (مع رابط المبادرة):</label>
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <label class="inline-flex items-center gap-1.5 bg-white border border-amber-300 px-2.5 py-1 rounded-lg font-bold cursor-pointer">
+              <input type="checkbox" id="init-target-all" onchange="toggleInitTargets(this.checked)" checked class="accent-ghayth-teal" />
+              <span>🌟 جميع المتطوعين والكادر</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1 rounded-lg font-bold cursor-pointer">
+              <input type="checkbox" name="init-target-level" value="volunteer" checked class="accent-ghayth-teal" />
+              <span>المتطوعون</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1 rounded-lg font-bold cursor-pointer">
+              <input type="checkbox" name="init-target-level" value="initiator" checked class="accent-ghayth-teal" />
+              <span>المبادرون</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1 rounded-lg font-bold cursor-pointer">
+              <input type="checkbox" name="init-target-level" value="programs" checked class="accent-ghayth-teal" />
+              <span>إدارة البرامج</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1 rounded-lg font-bold cursor-pointer">
+              <input type="checkbox" name="init-target-level" value="operations" checked class="accent-ghayth-teal" />
+              <span>إدارة العمليات</span>
+            </label>
+            <label class="inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1 rounded-lg font-bold cursor-pointer">
+              <input type="checkbox" name="init-target-level" value="advisors" checked class="accent-ghayth-teal" />
+              <span>المستشارون</span>
+            </label>
+          </div>
+          <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-700 pt-1 cursor-pointer">
+            <input type="checkbox" id="init-same-gov-only" class="accent-ghayth-teal" />
+            <span>📍 إرسال الدعوة للمتواجدين في نفس محافظة المبادرة فقط</span>
+          </label>
+        </div>
+
         <div class="flex justify-end gap-2 pt-3 border-t">
           <button type="button" onclick="closeInitiativeModal()" class="px-4 py-2 rounded-xl border font-bold">إلغاء</button>
-          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-700">حفظ ومزامنة</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-700">حفظ وإرسال الدعوات</button>
         </div>
       </form>
     </div>
@@ -689,7 +763,6 @@
 
   <script>
     const GOOGLE_CLIENT_ID = "401484270892-undd1pnffs1oa66vbhnb75fkflmqs29n.apps.googleusercontent.com";
-    // الرابط الجديد المعتمد بعد النشر في Google Apps Script
     const CLOUD_API_URL = "https://script.google.com/macros/s/AKfycbwkdSlZDC2XrV1leVJ-RRY5lAcAdJBn14YrYDef6oWuv1j2fRsZFeJdBPXO6KsK0zgv/exec";
     const SUPER_ADMINS = ["anwar2n@gmail.com", "ghaythforhumanity@gmail.com"];
 
@@ -726,7 +799,12 @@
     ];
 
     const DAYS_LIST = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
-    const TIMES_LIST = ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)', 'مساءً (4 م - 8 م)', 'عن بُعد (أونلاين)'];
+    const TIMES_LIST = [
+      { label: 'صباحاً (8 ص - 12 م)', hours: 4 },
+      { label: 'ظهراً (12 م - 4 م)', hours: 4 },
+      { label: 'مساءً (4 م - 8 م)', hours: 4 },
+      { label: 'عن بُعد (أونلاين)', hours: 2 }
+    ];
 
     const DEFAULT_SETTINGS = {
       orgName: "جمعية غيث لأجل الإنسانية",
@@ -748,19 +826,19 @@
     const DEFAULT_MEMBERS = [
       {
         id: 'm1', name: 'فاطمة الآمنة', email: '', country: 'سوريا', gov: 'إدلب', address: 'إدلب المدينة', lat: 35.9315, lng: 36.6350, phone: '+963 900 000 001', hours: 320,
-        commitment: 'full', commitmentDays: 6,
+        commitment: 'full', dedicationPercent: 100, commitmentDays: 5,
         roles: [
           { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees' },
           { title: 'رئيس مجلس الإدارة', level: 'board' },
           { title: 'مشرف البرامج التنموية والتمكين', level: 'programs' }
         ],
         initiatives: ['حرفة ورقم', 'مبادرون', 'التراث والسلام في قلعة حارم'],
-        prefDays: ['السبت', 'الإثنين', 'الأربعاء'], prefTimes: ['صباحاً (8 ص - 12 م)', 'مساءً (4 م - 8 م)'],
+        prefDays: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء'], prefTimes: ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)'],
         bio: 'قائدة مجتمعية تشرف على التخطيط الاستراتيجي للجمعية وتمكين الأسر التي تعيلها نساء والحفاظ على الحرف التراثية.'
       },
       {
         id: 'm2', name: 'محمد أنور علي العلي', email: 'anwar2n@gmail.com', country: 'سوريا', gov: 'إدلب', address: 'إدلب', lat: 35.9290, lng: 36.6310, phone: '+963 951 353 018', hours: 340,
-        commitment: 'full', commitmentDays: 6,
+        commitment: 'full', dedicationPercent: 100, commitmentDays: 5,
         roles: [
           { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees' },
           { title: 'عضو مجلس الإدارة ومنسق الشراكات', level: 'board' },
@@ -768,61 +846,26 @@
           { title: 'قائد برنامج مبادرون لتأهيل المتطوعين', level: 'programs' }
         ],
         initiatives: ['مبادرون', 'حرفة ورقم', 'سوريا تستحق الحياة (ERW)', 'التراث والسلام في قلعة حارم'],
-        prefDays: ['السبت', 'الأحد', 'الثلاثاء', 'الخميس'], prefTimes: ['صباحاً (8 ص - 12 م)', 'عن بُعد (أونلاين)'],
+        prefDays: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء'], prefTimes: ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)'],
         bio: 'حاصل على دبلوم الإدارة المتكاملة للمشاريع، يقود الإدارة التنفيذية وبناء الشراكات المؤسسية وتطوير أنظمة المتابعة الرقمية.'
       },
       {
         id: 'm3', name: 'إبتهال عدواني', email: '', country: 'سوريا', gov: 'إدلب', address: 'إدلب', lat: 35.9340, lng: 36.6380, phone: '+963 900 000 003', hours: 260,
-        commitment: 'partial', commitmentDays: 4,
+        commitment: 'partial', dedicationPercent: 60, commitmentDays: 3,
         roles: [
           { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees' },
           { title: 'أمين السر وعضو مجلس الإدارة', level: 'board' }
         ],
         initiatives: ['مبادرون', 'كفالة تعليم الأيتام في تفتناز'],
-        prefDays: ['الأحد', 'الثلاثاء', 'الخميس'], prefTimes: ['صباحاً (8 ص - 12 م)'],
+        prefDays: ['الأحد', 'الثلاثاء', 'الخميس'], prefTimes: ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)'],
         bio: 'مسؤولة التوثيق المؤسسي وإدارة محاضر الاجتماعات ومتابعة الامتثال الإداري والقانوني للجمعية.'
-      },
-      {
-        id: 'm4', name: 'كندا الحوراني', email: '', country: 'سوريا', gov: 'دمشق', address: 'دمشق - المزة', lat: 33.5050, lng: 36.2550, phone: '+963 900 000 004', hours: 210,
-        commitment: 'partial', commitmentDays: 3,
-        roles: [
-          { title: 'منسقة البرامج والمشاريع المجتمعية', level: 'programs' },
-          { title: 'مبادرة مجتمعية', level: 'initiator' }
-        ],
-        initiatives: ['حرفة ورقم', 'سوريا تستحق الحياة (ERW)'],
-        prefDays: ['الجمعة', 'السبت'], prefTimes: ['ظهراً (12 م - 4 م)', 'عن بُعد (أونلاين)'],
-        bio: 'متخصصة في تنسيق الأنشطة الميدانية والتواصل المجتمعي وإدارة حملات التوعية الرقمية والميدانية.'
-      },
-      {
-        id: 'm5', name: 'إسراء رواس', email: '', country: 'سوريا', gov: 'حلب', address: 'حلب', lat: 36.2021, lng: 37.1343, phone: '+963 900 000 005', hours: 195,
-        commitment: 'partial', commitmentDays: 3,
-        roles: [
-          { title: 'مسؤولة المتابعة والتقييم (MEAL)', level: 'programs' },
-          { title: 'مستشارة التدريب وبناء القدرات', level: 'advisors' }
-        ],
-        initiatives: ['مبادرون', 'كفالة تعليم الأيتام في تفتناز'],
-        prefDays: ['الإثنين', 'الأربعاء', 'الجمعة'], prefTimes: ['مساءً (4 م - 8 م)', 'عن بُعد (أونلاين)'],
-        bio: 'تشرف على قياس أثر المشاريع وتصميم استبيانات التقييم الميداني وضمان جودة المخرجات التدريبية.'
-      },
-      {
-        id: 'm6', name: 'عبد الرزاق بكور', email: '', country: 'سوريا', gov: 'حماة', address: 'حماة', lat: 35.1318, lng: 36.7578, phone: '+963 900 000 006', hours: 230,
-        commitment: 'full', commitmentDays: 6,
-        roles: [
-          { title: 'منسق العمليات الميدانية واللوجستيات', level: 'operations' },
-          { title: 'متطوع ميداني أول', level: 'volunteer' }
-        ],
-        initiatives: ['سوريا تستحق الحياة (ERW)', 'التراث والسلام في قلعة حارم'],
-        prefDays: ['السبت', 'الأحد', 'الأربعاء', 'الخميس'], prefTimes: ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)'],
-        bio: 'يدير التنسيق الميداني واللوجستي وتنفيذ جلسات التوعية من مخلفات الحرب وإدارة الفرق التطوعية في الميدان.'
       }
     ];
 
     const DEFAULT_INITIATIVES = [
       { id: 'i1', title: 'برنامج مبادرون لتمكين المتطوعين', lead: 'محمد أنور علي العلي', location: 'إدلب', volunteers: 45, hours: 540, partners: 'جمعية غيث لأجل الإنسانية', desc: 'برنامج تأهيلي متكامل لتدريب المتطوعين على كتابة المشاريع، القيادة الميدانية، والمبادئ الإنسانية.' },
       { id: 'i2', title: 'مبادرة حِرفة ورقم (Craft & Click)', lead: 'فاطمة الآمنة', location: 'إدلب', volunteers: 32, hours: 480, partners: 'المديرية العامة للآثار والمتاحف • الاتحاد العام للحرفيين', desc: 'تمكين الأسر التي تعيلها نساء عبر الحفاظ على الحرف التراثية وتسويقها إلكترونياً.' },
-      { id: 'i3', title: 'حملة سوريا تستحق الحياة (التوعية بمخلفات الحرب ERW)', lead: 'عبد الرزاق بكور', location: 'إدلب وحماة', volunteers: 28, hours: 360, partners: 'بالتعاون مع مجموعة استشارات الألغام (MAG)', desc: 'حملة توعية رقمية وميدانية للحد من مخاطر مخلفات الحرب غير المنفجرة وحماية المجتمعات المحلية.' },
-      { id: 'i4', title: 'شراكة صون التراث في قلعة حارم (INTIQAL)', lead: 'محمد أنور علي العلي', location: 'حارم - إدلب', volunteers: 24, hours: 310, partners: 'Première Urgence Internationale (PUI)', desc: 'مشروع مجتمعي لصون التراث الثقافي وتعزيز التماسك المجتمعي حول قلعة حارم التاريخية.' },
-      { id: 'i5', title: 'مبادرة كفالة ودعم تعليم الأيتام في تفتناز', lead: 'إبتهال عدواني', location: 'تفتناز - إدلب', volunteers: 18, hours: 240, partners: 'جمعية غيث لأجل الإنسانية', desc: 'برنامج إرشاد ودعم تعليمي للطلاب الأيتام والمتعثرين دراسياً في المرحلة الابتدائية.' }
+      { id: 'i3', title: 'حملة سوريا تستحق الحياة (التوعية بمخلفات الحرب ERW)', lead: 'عبد الرزاق بكور', location: 'إدلب وحماة', volunteers: 28, hours: 360, partners: 'بالتعاون مع مجموعة استشارات الألغام (MAG)', desc: 'حملة توعية رقمية وميدانية للحد من مخاطر مخلفات الحرب غير المنفجرة وحماية المجتمعات المحلية.' }
     ];
 
     let settings = JSON.parse(localStorage.getItem('ghayth_settings_v2')) || DEFAULT_SETTINGS;
@@ -838,6 +881,21 @@
     let leafletMap = null;
     let markersLayer = null;
     let tempCapturedCoords = { lat: null, lng: null };
+
+    // القائمة الجانبية المنسدلة
+    function toggleSidebarMenu() {
+      const drawer = document.getElementById('sidebar-drawer');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (!drawer || !backdrop) return;
+      const isClosed = drawer.classList.contains('translate-x-full');
+      if (isClosed) {
+        drawer.classList.remove('translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        drawer.classList.add('translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
 
     function populateCountriesDropdown(countrySelectId, govSelectId, selectedCountry = "سوريا", selectedGov = "") {
       const cSel = document.getElementById(countrySelectId);
@@ -974,25 +1032,17 @@
       if (!listEl) return;
 
       const actionable = requests.filter(r =>
-        r.status === 'pending' && ((r.type === 'join' && canApproveJoin()) || (r.type === 'hours' && canApproveHours()))
+        r.status === 'pending' && ((r.type === 'join' && canApproveJoin()) || ((r.type === 'hours' || r.type === 'certificate') && canApproveHours()))
       );
 
       if (bellBadge) {
-        if (actionable.length > 0) {
-          bellBadge.textContent = actionable.length;
-          bellBadge.classList.remove('hidden');
-        } else {
-          bellBadge.classList.add('hidden');
-        }
+        if (actionable.length > 0) { bellBadge.textContent = actionable.length; bellBadge.classList.remove('hidden'); }
+        else bellBadge.classList.add('hidden');
       }
 
       if (reqBadge) {
-        if (actionable.length > 0) {
-          reqBadge.textContent = actionable.length;
-          reqBadge.classList.remove('hidden');
-        } else {
-          reqBadge.classList.add('hidden');
-        }
+        if (actionable.length > 0) { reqBadge.textContent = actionable.length; reqBadge.classList.remove('hidden'); }
+        else reqBadge.classList.add('hidden');
       }
 
       if (actionable.length === 0) {
@@ -1000,16 +1050,19 @@
         return;
       }
 
-      listEl.innerHTML = actionable.map(r => `
-        <div onclick="switchTab('requests'); toggleNotificationsMenu();" class="p-3 hover:bg-teal-50 cursor-pointer transition">
-          <div class="flex items-center justify-between">
-            <span class="font-extrabold text-ghayth-dark">${r.type === 'join' ? '🤝 طلب انضمام جديد' : `⏱️ اعتماد (${r.hours} ساعة)`}</span>
-            <span class="text-[10px] text-slate-400">${r.createdAt || ''}</span>
+      listEl.innerHTML = actionable.map(r => {
+        const title = r.type === 'join' ? '🤝 طلب انضمام جديد' : (r.type === 'certificate' ? '📜 طلب شهادة تطوع' : `⏱️ اعتماد (${r.hours} ساعة)`);
+        return `
+          <div onclick="switchTab('requests'); toggleNotificationsMenu();" class="p-3 hover:bg-teal-50 cursor-pointer transition">
+            <div class="flex items-center justify-between">
+              <span class="font-extrabold text-ghayth-dark">${title}</span>
+              <span class="text-[10px] text-slate-400">${r.createdAt || ''}</span>
+            </div>
+            <p class="text-slate-700 mt-0.5 font-bold">${r.name} (${r.gov || 'سوريا'})</p>
+            <p class="text-[11px] text-ghayth-teal mt-0.5 underline">انقر للمراجعة والاعتماد ←</p>
           </div>
-          <p class="text-slate-700 mt-0.5 font-bold">${r.name} (${r.gov || 'سوريا'})</p>
-          <p class="text-[11px] text-ghayth-teal mt-0.5 underline">انقر للمراجعة والاعتماد ←</p>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function applyAuthUI() {
@@ -1210,13 +1263,13 @@
         applyAuthUI();
         updateAllViews();
         setSyncStatus("✅ متزامن مع قاعدة البيانات", "bg-emerald-500 text-white");
-        if (manual) alert("تمت مزامنة كافة البيانات مع ملف قاعدة بيانات التطوع في Google Sheets بنجاح!");
+        if (manual) alert("تمت مزامنة كافة البيانات مع ملف قاعدة بيانات التطوع الموحد في Google Sheets!");
       } catch (err) {
-        setSyncStatus("⚠️ وضع محلي (اضغط تحديث بعد النشر)", "bg-amber-600 text-white");
+        setSyncStatus("⚠️ وضع محلي", "bg-amber-600 text-white");
       }
     }
 
-    async function pushToCloud() {
+    async function pushToCloud(extraPayload = {}) {
       if (!canEditData() && !canReviewRequests() && !isAdmin()) return;
       if (!currentUser) return;
 
@@ -1227,7 +1280,7 @@
           mode: 'no-cors',
           redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
+          body: JSON.stringify(Object.assign({
             idToken: isTokenExpired(currentUser.idToken) ? "" : currentUser.idToken,
             userEmail: currentUser.email,
             sessionKey: currentUser.sessionKey,
@@ -1237,7 +1290,7 @@
             permissions,
             requests,
             logo: localStorage.getItem('ghayth_logo_v2') || ''
-          })
+          }, extraPayload))
         });
         setSyncStatus("✅ تم الحفظ والمزامنة", "bg-emerald-500 text-white");
       } catch (err) {
@@ -1245,7 +1298,7 @@
       }
     }
 
-    function saveData() {
+    function saveData(extraPayload = {}) {
       localStorage.setItem('ghayth_settings_v2', JSON.stringify(settings));
       localStorage.setItem('ghayth_members_v2', JSON.stringify(members));
       localStorage.setItem('ghayth_initiatives_v2', JSON.stringify(initiatives));
@@ -1253,7 +1306,7 @@
       localStorage.setItem('ghayth_requests_v2', JSON.stringify(requests));
       applyAuthUI();
       updateAllViews();
-      pushToCloud();
+      pushToCloud(extraPayload);
     }
 
     function renderAvailabilityAnalytics() {
@@ -1264,7 +1317,7 @@
       const dayCounts = {};
       DAYS_LIST.forEach(d => dayCounts[d] = 0);
       const timeCounts = {};
-      TIMES_LIST.forEach(t => timeCounts[t] = 0);
+      TIMES_LIST.forEach(t => timeCounts[t.label] = 0);
 
       members.forEach(m => {
         (m.prefDays || []).forEach(d => { if (dayCounts[d] !== undefined) dayCounts[d]++; });
@@ -1296,13 +1349,13 @@
         `;
       }).join('');
 
-      const timesHtml = TIMES_LIST.map(t => {
-        const count = timeCounts[t];
+      const timesHtml = TIMES_LIST.map(tObj => {
+        const count = timeCounts[tObj.label];
         const pct = Math.round((count / maxTimeVal) * 100);
         return `
           <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
             <div class="flex justify-between items-center text-xs font-bold mb-1.5">
-              <span class="text-slate-800">${t}</span>
+              <span class="text-slate-800">${tObj.label}</span>
               <span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">${count} متطوع</span>
             </div>
             <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -1355,7 +1408,7 @@
             <strong style="color: #0B4F4A; font-size: 14px;">${m.name}</strong><br/>
             <span style="color: #0F766E; font-size: 12px; font-weight: bold;">${rolesStr}</span><br/>
             <span style="font-size: 11px; color: #475569;">📍 ${m.country || 'سوريا'} - ${m.gov} ${m.address ? '(' + m.address + ')' : ''}</span><br/>
-            <span style="font-size: 11px; color: #D97706; font-weight: bold;">⏱️ ${m.hours || 0} ساعة تطوع</span>
+            <span style="font-size: 11px; color: #D97706; font-weight: bold;">⏱️ ${m.hours || 0} ساعة تطوع • تفرغ ${m.dedicationPercent || (m.commitment === 'full' ? 100 : 50)}%</span>
           </div>
         `);
       });
@@ -1388,6 +1441,115 @@
       );
     }
 
+    // حساب نسبة التفرغ الذكية (100% عند 5 أيام × 8 ساعات = 40 ساعة أسبوعياً، أو عند اختيار متفرغ كامل)
+    function recalculateDedication(prefix) {
+      const typeSel = document.getElementById(prefix + '-commit-type');
+      const partialBox = document.getElementById(prefix + '-partial-schedule-box');
+      const pctDisplay = document.getElementById(prefix + '-dedication-pct');
+      const pctBar = document.getElementById(prefix + '-dedication-bar');
+      const pctDetail = document.getElementById(prefix + '-dedication-detail');
+      if (!typeSel || !pctDisplay) return;
+
+      let pct = 100;
+      let detailText = "تفرغ كامل: 5 أيام بالدوام الرسمي بمعدل 8 ساعات يومياً (40 ساعة أسبوعياً)";
+
+      if (typeSel.value === 'full') {
+        if (partialBox) partialBox.classList.add('hidden');
+        pct = 100;
+      } else {
+        if (partialBox) partialBox.classList.remove('hidden');
+        const checkedDays = Array.from(document.querySelectorAll(`input[name="${prefix}-pref-days"]:checked`)).map(c => c.value);
+        const checkedTimes = Array.from(document.querySelectorAll(`input[name="${prefix}-pref-times"]:checked`)).map(c => c.value);
+
+        const activeDaysCount = checkedDays.length;
+        let dailyHours = 0;
+        checkedTimes.forEach(tLabel => {
+          const found = TIMES_LIST.find(x => x.label === tLabel);
+          dailyHours += found ? found.hours : 4;
+        });
+        if (dailyHours > 8) dailyHours = 8;
+
+        const weeklyHours = activeDaysCount * dailyHours;
+        pct = Math.min(100, Math.round((weeklyHours / 40) * 100));
+        detailText = `${activeDaysCount} أيام أسبوعياً × ${dailyHours} ساعات يومياً = ${weeklyHours} ساعة أسبوعياً (من أصل 40 ساعة للدوام الكامل)`;
+      }
+
+      pctDisplay.textContent = pct + "%";
+      if (pctBar) pctBar.style.width = pct + "%";
+      if (pctDetail) pctDetail.textContent = detailText;
+      return pct;
+    }
+
+    function toggleAllWeekDays(prefix, isChecked) {
+      document.querySelectorAll(`input[name="${prefix}-pref-days"]`).forEach(cb => {
+        cb.checked = isChecked;
+      });
+      recalculateDedication(prefix);
+    }
+
+    function renderPortalDedicationWidget(prefix, currentType = 'partial', selectedDays = [], selectedTimes = []) {
+      const daysHtml = DAYS_LIST.map(d => `
+        <label class="inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:border-ghayth-teal">
+          <input type="checkbox" name="${prefix}-pref-days" value="${d}" ${selectedDays.includes(d) ? 'checked' : ''} onchange="recalculateDedication('${prefix}')" class="accent-ghayth-teal" />
+          <span>${d}</span>
+        </label>
+      `).join('');
+
+      const timesHtml = TIMES_LIST.map(tObj => `
+        <label class="inline-flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:border-ghayth-teal">
+          <input type="checkbox" name="${prefix}-pref-times" value="${tObj.label}" ${selectedTimes.includes(tObj.label) ? 'checked' : ''} onchange="recalculateDedication('${prefix}')" class="accent-ghayth-teal" />
+          <span>${tObj.label}</span>
+        </label>
+      `).join('');
+
+      return `
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+          <div>
+            <label class="block font-extrabold text-xs text-ghayth-dark mb-1">⏱️ حالة التفرغ والالتزام مع الجمعية *</label>
+            <select id="${prefix}-commit-type" onchange="recalculateDedication('${prefix}')" class="w-full border bg-white rounded-xl px-3 py-2 text-xs font-bold">
+              <option value="full" ${currentType === 'full' ? 'selected' : ''}>🟢 متفرغ (كامل أيام الأسبوع بالدوام الرسمي)</option>
+              <option value="partial" ${currentType !== 'full' ? 'selected' : ''}>🟡 متفرغ جزئي (أيام وأوقات محددة)</option>
+            </select>
+            <div class="mt-2 p-2.5 rounded-xl bg-teal-50/80 border border-teal-100 text-[11px] text-teal-900 leading-relaxed">
+              <strong>توضيح نظام التفرغ:</strong><br/>
+              • <strong>متفرغ:</strong> يعني الالتزام بكامل أيام الأسبوع ضمن ساعات الدوام الرسمي للجمعية (100%).<br/>
+              • <strong>متفرغ جزئي:</strong> يعني التطوع في أيام وأوقات محددة تختارها أدناه، وتُحتسب نسبة التفرغ تلقائياً (100% تعادل 5 أيام أسبوعياً × 8 ساعات يومياً).
+            </div>
+          </div>
+
+          <div id="${prefix}-partial-schedule-box" class="${currentType === 'full' ? 'hidden' : ''} space-y-3 pt-2 border-t border-slate-200">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="font-bold text-xs">📅 الأيام المفضلة للتطوع:</label>
+                <label class="inline-flex items-center gap-1.5 text-xs font-extrabold text-ghayth-teal cursor-pointer">
+                  <input type="checkbox" onchange="toggleAllWeekDays('${prefix}', this.checked)" ${selectedDays.length === DAYS_LIST.length ? 'checked' : ''} class="accent-ghayth-teal" />
+                  <span>كامل أيام الأسبوع</span>
+                </label>
+              </div>
+              <div class="flex flex-wrap gap-2">${daysHtml}</div>
+            </div>
+
+            <div>
+              <label class="block font-bold text-xs mb-1.5">⏰ الأوقات المفضلة للتطوع:</label>
+              <div class="flex flex-wrap gap-2">${timesHtml}</div>
+            </div>
+          </div>
+
+          <!-- مربع حساب نسبة التفرغ الفورية -->
+          <div class="p-3 rounded-xl bg-white border border-teal-200 shadow-xs">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-extrabold text-slate-700">📊 نسبة التفرغ المحسوبة تلقائياً:</span>
+              <span id="${prefix}-dedication-pct" class="text-base font-extrabold text-ghayth-teal">100%</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+              <div id="${prefix}-dedication-bar" class="bg-ghayth-teal h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
+            </div>
+            <p id="${prefix}-dedication-detail" class="text-[11px] text-slate-500 mt-1"></p>
+          </div>
+        </div>
+      `;
+    }
+
     function renderVolunteerPortal() {
       const container = document.getElementById('portal-content-container');
       if (!container || !currentUser) return;
@@ -1396,27 +1558,13 @@
       const myRequests = requests.filter(r => (r.email || '').toLowerCase() === currentUser.email);
       const initOptions = initiatives.map(i => `<option value="${i.title}">${i.title}</option>`).join('');
 
-      const daysCheckboxes = (selectedDays = []) => DAYS_LIST.map(d => `
-        <label class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:border-ghayth-teal">
-          <input type="checkbox" name="pref-days" value="${d}" ${selectedDays.includes(d) ? 'checked' : ''} class="accent-ghayth-teal" />
-          <span>${d}</span>
-        </label>
-      `).join('');
-
-      const timesCheckboxes = (selectedTimes = []) => TIMES_LIST.map(t => `
-        <label class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer hover:border-ghayth-teal">
-          <input type="checkbox" name="pref-times" value="${t}" ${selectedTimes.includes(t) ? 'checked' : ''} class="accent-ghayth-teal" />
-          <span>${t}</span>
-        </label>
-      `).join('');
-
       if (!memberRec) {
         const latestJoin = myRequests.find(r => r.type === 'join');
         const hasPendingJoin = latestJoin && latestJoin.status === 'pending';
         container.innerHTML = `
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-3xl mx-auto">
             <h2 class="text-xl font-extrabold text-ghayth-dark mb-1">🤝 طلب الانضمام كمتطوع في الجمعية</h2>
-            <p class="text-xs text-slate-600 mb-5">مرحباً <strong>${currentUser.name}</strong> (${currentUser.email}). أكمل بياناتك الجغرافية وأوقات تطوعك المفضلة ليتم إرسال طلبك فوراً لإدارة الجمعية.</p>
+            <p class="text-xs text-slate-600 mb-5">مرحباً <strong>${currentUser.name}</strong> (${currentUser.email}). أكمل بياناتك الجغرافية ونظام تفرغك ليتم إرسال طلبك فوراً لإدارة الجمعية.</p>
             ${latestJoin && latestJoin.adminNotes ? `
               <div class="mb-4 p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs text-sky-950">
                 <strong>💬 ملاحظات الإدارة على طلبك:</strong> ${latestJoin.adminNotes}
@@ -1464,15 +1612,7 @@
                   </button>
                 </div>
 
-                <div>
-                  <label class="block font-bold text-xs mb-1.5">الأيام المفضلة للتطوع:</label>
-                  <div class="flex flex-wrap gap-2">${daysCheckboxes(['السبت', 'الخميس'])}</div>
-                </div>
-
-                <div>
-                  <label class="block font-bold text-xs mb-1.5">الأوقات المفضلة للتطوع:</label>
-                  <div class="flex flex-wrap gap-2">${timesCheckboxes(['صباحاً (8 ص - 12 م)'])}</div>
-                </div>
+                ${renderPortalDedicationWidget('join', 'partial', ['السبت', 'الخميس'], ['صباحاً (8 ص - 12 م)'])}
 
                 <div>
                   <label class="block font-bold mb-1">المهارات والخبرات ومجال التطوع المفضل *</label>
@@ -1487,7 +1627,34 @@
           </div>
         `;
         populateCountriesDropdown('req-join-country', 'req-join-gov', 'سوريا', 'إدلب');
+        recalculateDedication('join');
         return;
+      }
+
+      // حالة شهادة التطوع للمتطوع (لا تظهر للطباعة إلا بعد موافقة الإدارة على طلب الشهادة)
+      const certReqs = myRequests.filter(r => r.type === 'certificate');
+      const approvedCert = certReqs.find(r => r.status === 'approved');
+      const pendingCert = certReqs.find(r => r.status === 'pending');
+
+      let certActionHtml = '';
+      if (approvedCert) {
+        certActionHtml = `
+          <button onclick="printCertificate('${memberRec.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-2.5 rounded-xl shadow transition">
+            🏅 طباعة شهادة التطوع المعتمدة (موافق عليها)
+          </button>
+        `;
+      } else if (pendingCert) {
+        certActionHtml = `
+          <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-bold text-center">
+            ⏳ طلب شهادة التطوع قيد مراجعة الإدارة
+          </div>
+        `;
+      } else {
+        certActionHtml = `
+          <button onclick="submitCertificateRequest()" class="w-full bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold text-xs py-2.5 rounded-xl transition">
+            📜 تقديم طلب إصدار شهادة تطوع للإدارة
+          </button>
+        `;
       }
 
       const myHistoryHtml = myRequests.length ? myRequests.map(r => {
@@ -1496,10 +1663,11 @@
           : r.status === 'rejected'
           ? '<span class="bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-0.5 rounded-full">❌ مرفوض</span>'
           : '<span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full">⏳ قيد المراجعة</span>';
+        const titleText = r.type === 'hours' ? `تسجيل (${r.hours} ساعة) — ${r.initiative}` : (r.type === 'certificate' ? 'طلب إصدار شهادة تطوع رسمية' : 'طلب انضمام للجمعية');
         return `
           <div class="p-3.5 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div>
-              <p class="font-bold text-slate-900">${r.type === 'hours' ? `تسجيل (${r.hours} ساعة) — ${r.initiative}` : 'طلب انضمام للجمعية'}</p>
+              <p class="font-bold text-slate-900">${titleText}</p>
               <p class="text-slate-500 mt-0.5">${r.notes || ''} • بتاريخ ${r.createdAt || ''}</p>
               ${r.adminNotes ? `<p class="text-ghayth-dark font-bold mt-1">💬 ملاحظات الإدارة: ${r.adminNotes}</p>` : ''}
             </div>
@@ -1511,7 +1679,7 @@
       const avatarSrc = memberRec.photo || currentUser.picture || '';
       const rolesDisplay = (memberRec.roles && memberRec.roles.length)
         ? memberRec.roles.map(r => `<span class="text-xs bg-teal-50 text-ghayth-dark border border-teal-200 font-bold px-2.5 py-1 rounded-lg">${r.title}</span>`).join('')
-        : '<span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-2.5 py-1 rounded-lg">متطوع معتمد (بانتظار إسناد مهام تخصصية)</span>';
+        : '<span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-2.5 py-1 rounded-lg">متطوع معتمد</span>';
 
       container.innerHTML = `
         <div class="grid lg:grid-cols-3 gap-6">
@@ -1523,6 +1691,9 @@
                 </div>
                 <h3 class="font-extrabold text-lg text-slate-900 mt-2">${memberRec.name}</h3>
                 <p class="text-xs text-slate-500">📍 ${memberRec.country || 'سوريا'} - ${memberRec.gov}</p>
+                <span class="mt-1.5 text-xs bg-teal-50 text-ghayth-dark border border-teal-200 font-extrabold px-3 py-0.5 rounded-full">
+                  نسبة التفرغ: ${memberRec.dedicationPercent || (memberRec.commitment === 'full' ? 100 : 50)}%
+                </span>
                 ${memberRec.cvName ? `<span class="mt-2 text-[11px] bg-sky-50 text-sky-800 border border-sky-200 px-2.5 py-0.5 rounded-full font-bold">📎 السيرة الذاتية مرفقة: ${memberRec.cvName}</span>` : ''}
               </div>
               <div class="mt-4 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
@@ -1538,15 +1709,13 @@
               <button onclick="printVolunteerProfile('${memberRec.id}')" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs py-2.5 rounded-xl transition">
                 🖨️ طباعة ملفي الشخصي وسجل الساعات
               </button>
-              <button onclick="printCertificate('${memberRec.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs py-2.5 rounded-xl transition">
-                🏅 طباعة شهادة التطوع المعتمدة
-              </button>
+              ${certActionHtml}
             </div>
           </div>
 
           <div class="lg:col-span-2 space-y-6">
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-              <h3 class="text-lg font-extrabold text-ghayth-dark mb-1">👤 تحديث ملفي الشخصي ومرفقاتي وأوقات التطوع</h3>
+              <h3 class="text-lg font-extrabold text-ghayth-dark mb-1">👤 تحديث ملفي الشخصي ومرفقاتي ونسبة التفرغ</h3>
               <form onsubmit="saveMyVolunteerProfile(event)" class="space-y-4 text-sm mt-3">
                 <div class="grid sm:grid-cols-3 gap-3">
                   <div>
@@ -1584,15 +1753,7 @@
                   </button>
                 </div>
 
-                <div>
-                  <label class="block font-bold text-xs mb-1.5">📅 الأيام المفضلة للتطوع:</label>
-                  <div class="flex flex-wrap gap-2">${daysCheckboxes(memberRec.prefDays || [])}</div>
-                </div>
-
-                <div>
-                  <label class="block font-bold text-xs mb-1.5">⏰ الأوقات المفضلة للتطوع:</label>
-                  <div class="flex flex-wrap gap-2">${timesCheckboxes(memberRec.prefTimes || [])}</div>
-                </div>
+                ${renderPortalDedicationWidget('prof', memberRec.commitment || 'partial', memberRec.prefDays || [], memberRec.prefTimes || [])}
 
                 <button type="submit" class="bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow transition">
                   💾 حفظ تحديثات ملفي الشخصي
@@ -1631,6 +1792,7 @@
         </div>
       `;
       populateCountriesDropdown('prof-country', 'prof-gov', memberRec.country || 'سوريا', memberRec.gov || 'إدلب');
+      recalculateDedication('prof');
     }
 
     async function saveMyVolunteerProfile(e) {
@@ -1639,12 +1801,20 @@
       const memberRec = getCurrentMemberRecord();
       if (!memberRec) return;
 
-      const selectedDays = Array.from(document.querySelectorAll('input[name="pref-days"]:checked')).map(c => c.value);
-      const selectedTimes = Array.from(document.querySelectorAll('input[name="pref-times"]:checked')).map(c => c.value);
+      const commitType = document.getElementById('prof-commit-type').value;
+      const pct = recalculateDedication('prof');
+      const selectedDays = commitType === 'full'
+        ? DAYS_LIST.slice(0, 5)
+        : Array.from(document.querySelectorAll('input[name="prof-pref-days"]:checked')).map(c => c.value);
+      const selectedTimes = commitType === 'full'
+        ? ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)']
+        : Array.from(document.querySelectorAll('input[name="prof-pref-times"]:checked')).map(c => c.value);
 
       memberRec.country = document.getElementById('prof-country').value;
       memberRec.gov = document.getElementById('prof-gov').value;
       memberRec.address = document.getElementById('prof-address').value.trim();
+      memberRec.commitment = commitType;
+      memberRec.dedicationPercent = pct;
       memberRec.prefDays = selectedDays;
       memberRec.prefTimes = selectedTimes;
       if (tempCapturedCoords.lat && tempCapturedCoords.lng) {
@@ -1684,7 +1854,7 @@
           })
         });
         setSyncStatus("✅ متزامن مع قاعدة البيانات", "bg-emerald-500 text-white");
-        alert("تم حفظ بيانات ملفك الشخصي وموقعك وتفضيلاتك بنجاح!");
+        alert("تم حفظ بيانات ملفك الشخصي ونسبة التفرغ وموقعك بنجاح!");
       } catch (err) {}
     }
 
@@ -1740,7 +1910,7 @@
         setSyncStatus("✅ تم إرسال الطلب", "bg-emerald-500 text-white");
         applyAuthUI();
         updateAllViews();
-        alert("تم إرسال طلبك بنجاح وحفظه في قاعدة بيانات الجمعية.");
+        alert("تم إرسال طلبك بنجاح إلى إدارة الجمعية.");
       } catch (err) {
         alert("تعذر إرسال الطلب، يرجى التحقق من الاتصال بالإنترنت.");
       }
@@ -1749,8 +1919,14 @@
     function submitJoinRequest(e) {
       e.preventDefault();
       if (!currentUser) return;
-      const selectedDays = Array.from(document.querySelectorAll('input[name="pref-days"]:checked')).map(c => c.value);
-      const selectedTimes = Array.from(document.querySelectorAll('input[name="pref-times"]:checked')).map(c => c.value);
+      const commitType = document.getElementById('join-commit-type').value;
+      const pct = recalculateDedication('join');
+      const selectedDays = commitType === 'full'
+        ? DAYS_LIST.slice(0, 5)
+        : Array.from(document.querySelectorAll('input[name="join-pref-days"]:checked')).map(c => c.value);
+      const selectedTimes = commitType === 'full'
+        ? ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)']
+        : Array.from(document.querySelectorAll('input[name="join-pref-times"]:checked')).map(c => c.value);
 
       sendVolunteerRequestToCloud({
         id: 'REQ-' + Date.now(),
@@ -1763,6 +1939,8 @@
         address: document.getElementById('req-join-address').value.trim(),
         lat: tempCapturedCoords.lat || '',
         lng: tempCapturedCoords.lng || '',
+        commitment: commitType,
+        dedicationPercent: pct,
         prefDays: selectedDays,
         prefTimes: selectedTimes,
         notes: document.getElementById('req-join-bio').value.trim()
@@ -1787,13 +1965,29 @@
       });
     }
 
-    // عرض مركز الطلبات مع إتاحة التعديل والحذف دائماً (سواء قبل القبول أو بعده)
+    function submitCertificateRequest() {
+      if (!currentUser) return;
+      const memberRec = getCurrentMemberRecord();
+      if (!memberRec) return;
+      sendVolunteerRequestToCloud({
+        id: 'CERT-' + Date.now(),
+        type: 'certificate',
+        email: currentUser.email,
+        memberId: memberRec.id,
+        name: memberRec.name,
+        country: memberRec.country || 'سوريا',
+        gov: memberRec.gov || '',
+        hours: memberRec.hours || 0,
+        notes: `طلب إصدار شهادة تطوع رسمية موثقة بإجمالي (${memberRec.hours || 0} ساعة تطوعية).`
+      });
+    }
+
     function renderRequestsCenter() {
       const container = document.getElementById('requests-list-container');
       if (!container) return;
 
       const visibleRequests = requests.filter(r =>
-        (r.type === 'join' && canApproveJoin()) || (r.type === 'hours' && canApproveHours())
+        (r.type === 'join' && canApproveJoin()) || ((r.type === 'hours' || r.type === 'certificate') && canApproveHours())
       );
 
       if (visibleRequests.length === 0) {
@@ -1803,14 +1997,17 @@
 
       container.innerHTML = visibleRequests.map(r => {
         const isJoin = r.type === 'join';
+        const isCert = r.type === 'certificate';
         const typeBadge = isJoin
           ? '<span class="bg-sky-100 text-sky-800 text-xs font-bold px-2.5 py-0.5 rounded-full">🤝 طلب انضمام متطوع</span>'
-          : `<span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full">⏱️ طلب اعتماد (${r.hours} ساعة)</span>`;
+          : (isCert
+            ? '<span class="bg-purple-100 text-purple-900 text-xs font-bold px-2.5 py-0.5 rounded-full">📜 طلب إصدار شهادة تطوع</span>'
+            : `<span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full">⏱️ طلب اعتماد (${r.hours} ساعة)</span>`);
 
         const statusBadge = r.status === 'pending'
           ? '<span class="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-lg">⏳ قيد المراجعة</span>'
           : (r.status === 'approved'
-            ? `<span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">✅ مقبول ومُرحّل للسجل ${r.reviewedBy ? '(' + r.reviewedBy + ')' : ''}</span>`
+            ? `<span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">✅ مقبول ومُعتمد ${r.reviewedBy ? '(' + r.reviewedBy + ')' : ''}</span>`
             : `<span class="text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">❌ مرفوض</span>`);
 
         const controlsHtml = r.status === 'pending' ? `
@@ -1829,6 +2026,10 @@
           </div>
         `;
 
+        const detailsHtml = isJoin
+          ? `📍 ${r.country || 'سوريا'} - <strong>${r.gov}</strong> (${r.address || ''}) • 📱 ${r.phone || ''} • التفرغ: <strong>${r.dedicationPercent || 50}%</strong><br/>📅 الأيام: ${(r.prefDays || []).join('، ')} | ⏰ الأوقات: ${(r.prefTimes || []).join('، ')}<br/>الخبرات: ${r.notes}`
+          : (isCert ? r.notes : `🚀 المبادرة: <strong>${r.initiative}</strong> — التفاصيل: ${r.notes}`);
+
         return `
           <div class="p-4 rounded-xl border ${r.status === 'pending' ? 'border-amber-300 bg-amber-50/30' : 'border-slate-200 bg-white'} flex flex-wrap items-center justify-between gap-4 text-sm">
             <div class="space-y-1">
@@ -1837,11 +2038,7 @@
                 <strong class="text-slate-900">${r.name}</strong>
                 <span class="text-xs text-slate-500">(${r.email})</span>
               </div>
-              <p class="text-xs text-slate-700">
-                ${isJoin
-                  ? `📍 ${r.country || 'سوريا'} - <strong>${r.gov}</strong> (${r.address || ''}) • 📱 ${r.phone || ''} ${r.lat ? `• GPS: ${r.lat}, ${r.lng}` : ''}<br/>📅 الأيام: ${(r.prefDays || []).join('، ')} | ⏰ الأوقات: ${(r.prefTimes || []).join('، ')}<br/>الخبرات: ${r.notes}`
-                  : `🚀 المبادرة: <strong>${r.initiative}</strong> — التفاصيل: ${r.notes}`}
-              </p>
+              <p class="text-xs text-slate-700">${detailsHtml}</p>
               ${r.adminNotes ? `<p class="text-xs text-ghayth-dark font-bold bg-teal-50 px-2.5 py-1 rounded-lg inline-block">💬 ملاحظات المدير: ${r.adminNotes}</p>` : ''}
               <p class="text-[11px] text-slate-400">رقم الطلب: ${r.id} • التاريخ: ${r.createdAt || '-'}</p>
             </div>
@@ -1866,13 +2063,16 @@
       document.getElementById('rev-admin-notes').value = req.adminNotes || '';
 
       const isJoin = req.type === 'join';
+      const isCert = req.type === 'certificate';
       document.getElementById('review-modal-title').textContent = isJoin
         ? 'مراجعة واعتماد طلب انضمام المتطوع'
-        : 'مراجعة واعتماد ساعات التطوع';
+        : (isCert ? 'الموافقة على إصدار شهادة التطوع' : 'مراجعة واعتماد ساعات التطوع');
 
       document.getElementById('rev-req-summary').innerHTML = isJoin
-        ? `<strong>المتقدم:</strong> ${req.name} (${req.email})<br/><strong>الموقع:</strong> ${req.country || 'سوريا'} - ${req.gov} (${req.address || '-'})<br/><strong>الخبرات:</strong> ${req.notes}`
-        : `<strong>المتطوع:</strong> ${req.name}<br/><strong>المبادرة:</strong> ${req.initiative} — <strong>الساعات المطلوبة:</strong> ${req.hours} ساعة<br/><strong>التفاصيل:</strong> ${req.notes}`;
+        ? `<strong>المتقدم:</strong> ${req.name} (${req.email})<br/><strong>الموقع:</strong> ${req.country || 'سوريا'} - ${req.gov} (${req.address || '-'}) • <strong>نسبة التفرغ:</strong> ${req.dedicationPercent || 50}%<br/><strong>الخبرات:</strong> ${req.notes}`
+        : (isCert
+          ? `<strong>المتطوع:</strong> ${req.name} (${req.email})<br/><strong>الطلب:</strong> ${req.notes}`
+          : `<strong>المتطوع:</strong> ${req.name}<br/><strong>المبادرة:</strong> ${req.initiative} — <strong>الساعات المطلوبة:</strong> ${req.hours} ساعة<br/><strong>التفاصيل:</strong> ${req.notes}`);
 
       onChangeReviewDecision();
       const modal = document.getElementById('review-modal');
@@ -1887,6 +2087,7 @@
       const commitBox = document.getElementById('rev-commitment-box');
       if (req && req.type === 'join' && decision === 'approved') {
         commitBox.classList.remove('hidden');
+        document.getElementById('rev-commitment').value = req.commitment || 'partial';
         toggleRevCommitmentDays();
       } else {
         commitBox.classList.add('hidden');
@@ -1918,48 +2119,30 @@
       if (decision === 'approved') {
         if (req.type === 'join' && canApproveJoin()) {
           const commitVal = document.getElementById('rev-commitment').value;
-          const commitDays = commitVal === 'partial' ? Number(document.getElementById('rev-commitment-days').value || 2) : 6;
+          const commitDays = commitVal === 'partial' ? Number(document.getElementById('rev-commitment-days').value || 2) : 5;
+          const pct = req.dedicationPercent || (commitVal === 'full' ? 100 : commitDays * 20);
           const emailLower = (req.email || '').toLowerCase().trim();
           const existingIdx = members.findIndex(m => (m.email || '').toLowerCase().trim() === emailLower && emailLower !== '');
 
           if (existingIdx !== -1) {
-            // تحديث بيانات المتطوع إذا كان موجوداً مسبقاً
             members[existingIdx] = Object.assign({}, members[existingIdx], {
-              name: req.name,
-              country: req.country || 'سوريا',
-              gov: req.gov,
+              name: req.name, country: req.country || 'سوريا', gov: req.gov,
               address: req.address || members[existingIdx].address || '',
-              lat: req.lat || members[existingIdx].lat || '',
-              lng: req.lng || members[existingIdx].lng || '',
+              lat: req.lat || members[existingIdx].lat || '', lng: req.lng || members[existingIdx].lng || '',
               phone: req.phone || members[existingIdx].phone || '',
-              commitment: commitVal,
-              commitmentDays: commitDays,
+              commitment: commitVal, commitmentDays: commitDays, dedicationPercent: pct,
               prefDays: req.prefDays || members[existingIdx].prefDays || [],
               prefTimes: req.prefTimes || members[existingIdx].prefTimes || [],
-              bio: req.notes || members[existingIdx].bio || '',
-              adminNotes: adminNotes
+              bio: req.notes || members[existingIdx].bio || '', adminNotes: adminNotes
             });
           } else {
-            // إضافة المتطوع الجديد فوراً إلى قائمة المتطوعين
             members.unshift({
-              id: 'm_' + Date.now(),
-              name: req.name,
-              email: emailLower,
-              country: req.country || 'سوريا',
-              gov: req.gov,
-              address: req.address || '',
-              lat: req.lat || '',
-              lng: req.lng || '',
-              phone: req.phone,
-              hours: 0,
-              commitment: commitVal,
-              commitmentDays: commitDays,
-              roles: [],
-              initiatives: [],
-              prefDays: req.prefDays || [],
-              prefTimes: req.prefTimes || [],
-              bio: req.notes,
-              adminNotes: adminNotes
+              id: 'm_' + Date.now(), name: req.name, email: emailLower,
+              country: req.country || 'سوريا', gov: req.gov, address: req.address || '',
+              lat: req.lat || '', lng: req.lng || '', phone: req.phone, hours: 0,
+              commitment: commitVal, commitmentDays: commitDays, dedicationPercent: pct,
+              roles: [], initiatives: [], prefDays: req.prefDays || [], prefTimes: req.prefTimes || [],
+              bio: req.notes, adminNotes: adminNotes
             });
           }
         } else if (req.type === 'hours' && canApproveHours() && prevStatus !== 'approved') {
@@ -2007,7 +2190,7 @@
         const permsTags = isAdm
           ? '<span class="text-xs font-bold text-slate-600">كافة الصلاحيات (الإدارة، الطلبات، البيانات)</span>'
           : [
-              p.canApproveHours ? '<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold px-2 py-0.5 rounded">⏱️ اعتماد الساعات</span>' : '',
+              p.canApproveHours ? '<span class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold px-2 py-0.5 rounded">⏱️ اعتماد الساعات والشهادات</span>' : '',
               p.canApproveJoin ? '<span class="bg-sky-50 text-sky-800 border border-sky-200 text-[11px] font-bold px-2 py-0.5 rounded">🤝 قبول المتطوعين</span>' : '',
               p.canEditData ? '<span class="bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold px-2 py-0.5 rounded">✏️ تعديل البيانات</span>' : ''
             ].filter(Boolean).join(' ') || '<span class="text-xs text-slate-400">بدون صلاحيات مفعلة</span>';
@@ -2062,21 +2245,42 @@
       if (tabName === 'requests' && !canReviewRequests()) return;
       if (tabName === 'portal' && !currentUser) return;
 
+      const sectionNames = {
+        dashboard: 'لوحة القيادة والتحليل الذكي',
+        volunteers: 'سجل الكادر والمتطوعين والخريطة',
+        orgchart: 'الهيكل التنظيمي ومصفوفة المهام',
+        initiatives: 'المبادرات وساعات التطوع',
+        portal: 'بوابة المتطوع وملفي الشخصي',
+        requests: 'مركز الطلبات والشهادات',
+        permissions: 'إدارة الصلاحيات والمشرفين'
+      };
+
       ['dashboard', 'volunteers', 'orgchart', 'initiatives', 'portal', 'requests', 'permissions'].forEach(t => {
         const view = document.getElementById('view-' + t);
         const btn = document.getElementById('tab-' + t);
+        const sideBtn = document.getElementById('side-' + t);
         if (view) view.classList.add('hidden');
         if (btn) {
           btn.classList.remove('bg-white', 'text-ghayth-dark', 'shadow');
-          if (!['permissions', 'requests', 'portal'].includes(t)) btn.classList.add('text-teal-100');
+          if (t !== 'portal') btn.classList.add('text-teal-100');
+        }
+        if (sideBtn) {
+          sideBtn.classList.remove('bg-teal-50', 'text-ghayth-dark');
         }
       });
+
       document.getElementById('view-' + tabName).classList.remove('hidden');
       const activeBtn = document.getElementById('tab-' + tabName);
       if (activeBtn) {
         activeBtn.classList.add('bg-white', 'text-ghayth-dark', 'shadow');
         activeBtn.classList.remove('text-teal-100');
       }
+      const activeSide = document.getElementById('side-' + tabName);
+      if (activeSide) activeSide.classList.add('bg-teal-50', 'text-ghayth-dark');
+
+      const indicator = document.getElementById('current-section-indicator');
+      if (indicator) indicator.textContent = 'القسم الحالي: ' + (sectionNames[tabName] || '');
+
       if (tabName === 'volunteers') renderVolunteersMap();
     }
 
@@ -2135,11 +2339,12 @@
               const info = getLevelInfo(r.level);
               return `<span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border ${info.badge}">${r.title}</span>`;
             }).join('')
-          : `<span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200">متطوع معتمد (بانتظار إسناد مهام)</span>`;
+          : `<span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200">متطوع معتمد</span>`;
 
+        const pct = m.dedicationPercent || (m.commitment === 'full' ? 100 : 50);
         const commitmentBadge = m.commitment === 'full'
-          ? `<span class="text-[11px] bg-teal-50 text-ghayth-dark border border-teal-200 font-bold px-2 py-0.5 rounded-md">🟢 التزام كامل</span>`
-          : `<span class="text-[11px] bg-amber-50 text-amber-900 border border-amber-200 font-bold px-2 py-0.5 rounded-md">🟡 التزام جزئي (${m.commitmentDays || 2} أيام/أسبوع)</span>`;
+          ? `<span class="text-[11px] bg-teal-50 text-ghayth-dark border border-teal-200 font-bold px-2 py-0.5 rounded-md">🟢 متفرغ (100%)</span>`
+          : `<span class="text-[11px] bg-amber-50 text-amber-900 border border-amber-200 font-bold px-2 py-0.5 rounded-md">🟡 متفرغ جزئي (${pct}%)</span>`;
 
         const initsHtml = (m.initiatives || []).map(i =>
           `<span class="text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md"># ${i}</span>`
@@ -2151,6 +2356,7 @@
 
         const editButtons = editable ? `
           <div class="flex gap-1">
+            <button onclick="printCertificate('${m.id}')" class="text-amber-700 hover:bg-amber-50 font-bold px-2 py-1 rounded-lg border border-amber-200 transition">🏅 شهادة</button>
             <button onclick="openMemberModal('${m.id}')" class="text-ghayth-teal hover:bg-teal-50 font-bold px-2 py-1 rounded-lg">تعديل / مهام</button>
             <button onclick="deleteMember('${m.id}')" class="text-rose-600 hover:bg-rose-50 font-bold px-2 py-1 rounded-lg">حذف</button>
           </div>` : '';
@@ -2179,7 +2385,7 @@
 
             <div class="mt-4 pt-3 border-t flex flex-wrap items-center justify-between gap-2 text-xs">
               <div class="flex gap-1.5">
-                <button onclick="printCertificate('${m.id}')" class="text-amber-700 hover:bg-amber-50 font-bold px-2 py-1 rounded-lg border border-amber-200 transition">🏅 شهادة</button>
+                <button onclick="printVolunteerProfile('${m.id}')" class="text-slate-700 hover:bg-slate-100 font-bold px-2 py-1 rounded-lg border border-slate-200 transition">🖨️ الملف</button>
                 ${cvDownloadBtn}
               </div>
               ${editButtons}
@@ -2204,11 +2410,11 @@
             <div onclick="${editable ? `openMemberModal('${m.id}')` : ''}" class="${editable ? 'cursor-pointer hover:scale-[1.02]' : ''} bg-white border-2 ${levelObj.border} rounded-xl p-3 shadow-sm min-w-[195px] max-w-[240px] text-center transition">
               <p class="font-extrabold text-sm text-slate-900">${m.name}</p>
               <p class="text-xs font-bold text-ghayth-teal mt-1">${matchedTitles}</p>
-              <p class="text-[11px] text-slate-500 mt-1">📍 ${m.gov} • ${m.commitment === 'full' ? 'التزام كامل' : `جزئي (${m.commitmentDays || 2} أيام)`}</p>
+              <p class="text-[11px] text-slate-500 mt-1">📍 ${m.gov} • تفرغ ${m.dedicationPercent || (m.commitment === 'full' ? 100 : 50)}%</p>
               ${otherCount > 0 ? `<span class="inline-block mt-1.5 text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full">+ ${otherCount} مهمة إضافية</span>` : ''}
             </div>
           `;
-        }).join('') : `<div class="text-xs text-slate-400 italic py-2">لا يوجد مكلفون حالياً (انقر على إضافة مهام وظيفية لإسناد مهمة)</div>`;
+        }).join('') : `<div class="text-xs text-slate-400 italic py-2">لا يوجد مكلفون حالياً</div>`;
 
         return `
           <div class="w-full flex flex-col items-center">
@@ -2271,7 +2477,8 @@
       matrixBody.innerHTML = assignedMembers.map(m => {
         const primary = m.roles[0] ? `<span class="text-xs font-bold px-2 py-0.5 rounded border ${getLevelInfo(m.roles[0].level).badge}">${m.roles[0].title}</span>` : '-';
         const secondary = m.roles.slice(1).map(r => `<span class="inline-block border ${getLevelInfo(r.level).badge} text-xs font-bold px-2 py-0.5 rounded-md ml-1 mb-1">${r.title}</span>`).join('') || '<span class="text-xs text-slate-400">مهمة واحدة</span>';
-        const commitText = m.commitment === 'full' ? 'التزام كامل' : `جزئي (${m.commitmentDays || 2} أيام/أسبوع)`;
+        const pct = m.dedicationPercent || (m.commitment === 'full' ? 100 : 50);
+        const commitText = `${m.commitment === 'full' ? 'متفرغ' : 'جزئي'} (${pct}%)`;
         const actionCell = editable ? `<td class="p-3"><button onclick="openMemberModal('${m.id}')" class="text-xs bg-slate-100 hover:bg-ghayth-teal hover:text-white font-bold px-2.5 py-1 rounded-lg transition">تعديل المهام</button></td>` : '';
         return `
           <tr class="hover:bg-slate-50">
@@ -2289,28 +2496,35 @@
     function renderInitiatives() {
       const editable = canEditData();
       const grid = document.getElementById('initiatives-grid');
-      grid.innerHTML = initiatives.map(init => `
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
-          <div>
-            <div class="flex justify-between items-start gap-2">
-              <h3 class="font-extrabold text-base text-ghayth-dark">${init.title}</h3>
-              <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full shrink-0">📍 ${init.location}</span>
+      const urlParams = new URLSearchParams(window.location.search);
+      const highlightedInitId = urlParams.get('initiative');
+
+      grid.innerHTML = initiatives.map(init => {
+        const isHighlighted = highlightedInitId && init.id === highlightedInitId;
+        return `
+          <div id="init-card-${init.id}" class="bg-white rounded-2xl shadow-sm border ${isHighlighted ? 'border-2 border-amber-500 ring-4 ring-amber-100' : 'border-slate-200'} p-5 flex flex-col justify-between">
+            <div>
+              ${isHighlighted ? '<span class="inline-block mb-2 text-[11px] bg-amber-500 text-slate-950 font-extrabold px-2.5 py-0.5 rounded-full">🌟 مبادرة مدعوّ للمشاركة فيها</span>' : ''}
+              <div class="flex justify-between items-start gap-2">
+                <h3 class="font-extrabold text-base text-ghayth-dark">${init.title}</h3>
+                <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full shrink-0">📍 ${init.location}</span>
+              </div>
+              <p class="text-xs text-slate-600 mt-2 leading-relaxed">${init.desc}</p>
+              <div class="mt-3 p-2.5 rounded-xl bg-slate-50 text-xs space-y-1">
+                <p><strong>المنسق المسؤول:</strong> ${init.lead}</p>
+                <p><strong>الشركاء:</strong> ${init.partners || 'مبادرة ذاتية'}</p>
+              </div>
             </div>
-            <p class="text-xs text-slate-600 mt-2 leading-relaxed">${init.desc}</p>
-            <div class="mt-3 p-2.5 rounded-xl bg-slate-50 text-xs space-y-1">
-              <p><strong>المنسق المسؤول:</strong> ${init.lead}</p>
-              <p><strong>الشركاء:</strong> ${init.partners || 'مبادرة ذاتية'}</p>
+            <div class="mt-4 pt-3 border-t flex items-center justify-between text-xs">
+              <div class="flex gap-3 font-bold text-ghayth-teal">
+                <span>👥 ${init.volunteers} متطوع</span>
+                <span>⏱️ ${init.hours} ساعة</span>
+              </div>
+              ${editable ? `<button onclick="deleteInitiative('${init.id}')" class="text-rose-600 hover:underline font-bold">حذف</button>` : ''}
             </div>
           </div>
-          <div class="mt-4 pt-3 border-t flex items-center justify-between text-xs">
-            <div class="flex gap-3 font-bold text-ghayth-teal">
-              <span>👥 ${init.volunteers} متطوع</span>
-              <span>⏱️ ${init.hours} ساعة</span>
-            </div>
-            ${editable ? `<button onclick="deleteInitiative('${init.id}')" class="text-rose-600 hover:underline font-bold">حذف</button>` : ''}
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function toggleCommitmentDays() {
@@ -2413,6 +2627,9 @@
       const existing = id ? members.find(x => x.id === id) : null;
       const initiativesArr = document.getElementById('m-initiatives').value.split(/[,،]/).map(s => s.trim()).filter(Boolean);
       const commitmentVal = document.getElementById('m-commitment').value;
+      const cDays = commitmentVal === 'partial' ? Number(document.getElementById('m-commitment-days').value || 3) : 5;
+      const pct = commitmentVal === 'full' ? 100 : Math.min(100, cDays * 20);
+
       const memberObj = Object.assign({}, existing || {}, {
         id: id || 'm_' + Date.now(),
         name: document.getElementById('m-name').value.trim(),
@@ -2425,7 +2642,8 @@
         phone: document.getElementById('m-phone').value.trim(),
         hours: Number(document.getElementById('m-hours').value || 0),
         commitment: commitmentVal,
-        commitmentDays: commitmentVal === 'partial' ? Number(document.getElementById('m-commitment-days').value || 2) : 6,
+        commitmentDays: cDays,
+        dedicationPercent: pct,
         roles,
         initiatives: initiativesArr,
         bio: document.getElementById('m-bio').value.trim()
@@ -2449,6 +2667,12 @@
       }
     }
 
+    function toggleInitTargets(allChecked) {
+      document.querySelectorAll('input[name="init-target-level"]').forEach(cb => {
+        cb.checked = allChecked;
+      });
+    }
+
     function openInitiativeModal() {
       if (!canEditData()) return;
       document.getElementById('initiative-modal').classList.remove('hidden');
@@ -2463,7 +2687,7 @@
     function saveInitiative(e) {
       e.preventDefault();
       if (!canEditData()) return;
-      initiatives.unshift({
+      const newInit = {
         id: 'i_' + Date.now(),
         title: document.getElementById('i-title').value.trim(),
         lead: document.getElementById('i-lead').value.trim(),
@@ -2472,10 +2696,25 @@
         hours: Number(document.getElementById('i-hours').value || 0),
         partners: document.getElementById('i-partners').value.trim(),
         desc: document.getElementById('i-desc').value.trim()
+      };
+
+      const allChecked = document.getElementById('init-target-all').checked;
+      const targetLevels = allChecked
+        ? ['all']
+        : Array.from(document.querySelectorAll('input[name="init-target-level"]:checked')).map(c => c.value);
+      const sameGovOnly = document.getElementById('init-same-gov-only').checked;
+
+      initiatives.unshift(newInit);
+      saveData({
+        notifyInitiative: {
+          initiative: newInit,
+          targetLevels: targetLevels,
+          sameGovOnly: sameGovOnly
+        }
       });
-      saveData();
       closeInitiativeModal();
       e.target.reset();
+      alert("تم حفظ المبادرة الجديدة وإرسال رسائل الدعوة بالبريد الإلكتروني إلى الفئات المختارة من المتطوعين.");
     }
 
     function deleteInitiative(id) {
@@ -2484,54 +2723,6 @@
         initiatives = initiatives.filter(i => i.id !== id);
         saveData();
       }
-    }
-
-    function exportToExcel() {
-      if (!canEditData()) return;
-      const wb = XLSX.utils.book_new();
-      const ws1 = XLSX.utils.json_to_sheet(members.map(m => ({
-        'الاسم الكامل': m.name,
-        'البريد الإلكتروني': m.email || '',
-        'الدولة': m.country || 'سوريا',
-        'المحافظة': m.gov,
-        'العنوان': m.address || '',
-        'الإحداثيات (GPS)': (m.lat && m.lng) ? `${m.lat}, ${m.lng}` : '',
-        'نظام الالتزام': m.commitment === 'full' ? 'التزام كامل' : `التزام جزئي (${m.commitmentDays || 2} أيام/أسبوع)`,
-        'المهام والمستويات التنظيمية': (m.roles || []).map(r => `${r.title} (${getLevelInfo(r.level).label})`).join(' | '),
-        'ساعات التطوع': m.hours,
-        'الأيام المفضلة': (m.prefDays || []).join('، '),
-        'الأوقات المفضلة': (m.prefTimes || []).join('، '),
-        'المبادرات': (m.initiatives || []).join('، '),
-        'الهاتف': m.phone || ''
-      })));
-      XLSX.utils.book_append_sheet(wb, ws1, 'الكادر والمتطوعون');
-
-      const ws2 = XLSX.utils.json_to_sheet(initiatives.map(i => ({
-        'اسم المبادرة': i.title, 'المنسق المسؤول': i.lead, 'الموقع': i.location,
-        'عدد المتطوعين': i.volunteers, 'الساعات المنجزة': i.hours, 'الشركاء': i.partners
-      })));
-      XLSX.utils.book_append_sheet(wb, ws2, 'المبادرات والمشاريع');
-
-      const ws3 = XLSX.utils.json_to_sheet(requests.map(r => ({
-        'رقم الطلب': r.id,
-        'تاريخ التقديم': r.createdAt || '',
-        'نوع الطلب': r.type === 'join' ? 'طلب انضمام متطوع' : `تسجيل ${r.hours} ساعة`,
-        'الاسم الكامل': r.name,
-        'البريد الإلكتروني': r.email,
-        'الهاتف': r.phone || '',
-        'الدولة': r.country || 'سوريا',
-        'المحافظة': r.gov || '',
-        'العنوان': r.address || '',
-        'الإحداثيات (GPS)': (r.lat && r.lng) ? `${r.lat}, ${r.lng}` : '',
-        'الأيام المفضلة': (r.prefDays || []).join('، '),
-        'الأوقات المفضلة': (r.prefTimes || []).join('، '),
-        'التفاصيل والخبرات': r.notes || '',
-        'حالة الطلب': r.status === 'approved' ? 'مقبول' : (r.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة'),
-        'ملاحظات المدير': r.adminNotes || ''
-      })));
-      XLSX.utils.book_append_sheet(wb, ws3, 'طلبات_التطوع');
-
-      XLSX.writeFile(wb, 'قاعدة بيانات التطوع - جمعية غيث لأجل الإنسانية.xlsx');
     }
 
     function printVolunteerProfile(memberId) {
@@ -2550,6 +2741,7 @@
         </tr>
       `).join('') : `<tr><td colspan="4" style="border:1px solid #cbd5e1; padding:8px; text-align:center;">إجمالي الرصيد التراكمي الموثق: ${m.hours} ساعة تطوعية</td></tr>`;
 
+      const pct = m.dedicationPercent || (m.commitment === 'full' ? 100 : 50);
       const printArea = document.getElementById('print-area');
       printArea.classList.remove('hidden');
       printArea.innerHTML = `
@@ -2565,7 +2757,7 @@
               <tr><td style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc; width:28%;"><strong>الاسم الكامل:</strong></td><td style="border:1px solid #cbd5e1; padding:8px;">${m.name}</td></tr>
               <tr><td style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc;"><strong>الموقع الجغرافي:</strong></td><td style="border:1px solid #cbd5e1; padding:8px;">${m.country || 'سوريا'} - ${m.gov} (${m.address || '-'})</td></tr>
               <tr><td style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc;"><strong>المهام التنظيمية:</strong></td><td style="border:1px solid #cbd5e1; padding:8px;">${(m.roles && m.roles.length) ? m.roles.map(r => r.title).join(' — ') : 'متطوع معتمد'}</td></tr>
-              <tr><td style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc;"><strong>أوقات التوفر المفضلة:</strong></td><td style="border:1px solid #cbd5e1; padding:8px;">${(m.prefDays || []).join('، ')} | ${(m.prefTimes || []).join('، ')}</td></tr>
+              <tr><td style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc;"><strong>نسبة التفرغ والأوقات:</strong></td><td style="border:1px solid #cbd5e1; padding:8px;">${m.commitment === 'full' ? 'متفرغ' : 'متفرغ جزئي'} (${pct}%) • ${(m.prefDays || []).join('، ')}</td></tr>
               <tr><td style="border:1px solid #cbd5e1; padding:8px; background:#f8fafc;"><strong>إجمالي الساعات المعتمدة:</strong></td><td style="border:1px solid #cbd5e1; padding:8px; color:#0F766E;"><strong>${m.hours} ساعة تطوعية</strong></td></tr>
             </table>
             ${photoTag}
@@ -2654,7 +2846,13 @@
     applyAuthUI();
     updateAllViews();
     initGoogleAuth();
-    syncFromCloud();
+    syncFromCloud().then(() => {
+      // إذا فُتح الموقع من رابط مبادرة في الإيميل (?initiative=...)، ينتقل مباشرة لصفحة المبادرات
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('initiative')) {
+        switchTab('initiatives');
+      }
+    });
   </script>
 </body>
 </html>
