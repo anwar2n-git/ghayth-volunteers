@@ -71,7 +71,7 @@
           <p id="header-org-subtitle" class="text-xs md:text-sm text-teal-100 mt-1">
             مرخصة بالقرار رقم 2993 تاريخ 03/08/2025 — وزارة الشؤون الاجتماعية والعمل
           </p>
-          <p id="header-org-govs" class="text-xs text-teal-200 mt-0.5">نطاق العمل: إدلب • حلب • دمشق • حماة</p>
+          <p id="header-org-govs" class="text-xs text-teal-200 mt-0.5">نطاق العمل: مقرها الرئيسي في إدلب • كافة الأراضي السورية</p>
         </div>
       </div>
 
@@ -229,7 +229,7 @@
             </ul>
           </div>
           <div class="mt-5 p-3.5 rounded-xl bg-teal-50 border border-teal-100 text-xs text-teal-900 leading-relaxed">
-            <strong>مزامنة فورية:</strong> كافة التعديلات على النطاق الجغرافي، الهوية، وسجل المتطوعين تُحدّث سحابياً وتظهر لجميع المستخدمين تلقائياً.
+            <strong>مزامنة فورية وجلسة مستمرة:</strong> تبقى جلستك نشطة بشكل دائم حتى تسجيل الخروج، وكافة التعديلات تظهر للجميع تلقائياً.
           </div>
         </div>
       </div>
@@ -718,7 +718,9 @@
       canApproveJoin: true, canApproveHours: true, canEditData: true, addedAt: 'أساسي'
     }));
     let requests = JSON.parse(localStorage.getItem('ghayth_requests_v2')) || [];
-    let currentUser = JSON.parse(sessionStorage.getItem('ghayth_auth_user')) || null;
+
+    // تخزين الجلسة في localStorage بشكل دائم لا ينتهي إلا بتسجيل الخروج الصريح
+    let currentUser = JSON.parse(localStorage.getItem('ghayth_persistent_user')) || null;
     let googleAuthReady = false;
     let leafletMap = null;
     let markersLayer = null;
@@ -736,6 +738,7 @@
     }
 
     function isTokenExpired(token) {
+      if (!token) return true;
       const payload = parseJwt(token);
       if (!payload || !payload.exp) return true;
       return (Date.now() >= (payload.exp * 1000) - 30000);
@@ -748,23 +751,61 @@
         return;
       }
       const email = payload.email.toLowerCase().trim();
+      const existingKey = (currentUser && currentUser.email === email && currentUser.sessionKey)
+        ? currentUser.sessionKey
+        : ('sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10));
+
       currentUser = {
         email: email,
         name: payload.name || email,
         picture: payload.picture || '',
-        idToken: response.credential
+        idToken: response.credential,
+        sessionKey: existingKey
       };
-      sessionStorage.setItem('ghayth_auth_user', JSON.stringify(currentUser));
+      localStorage.setItem('ghayth_persistent_user', JSON.stringify(currentUser));
       applyAuthUI();
       updateAllViews();
+      // تسجيل الجلسة الدائمة في السحابة
+      registerPersistentSessionInCloud();
       if (!isAdmin() && !canEditData() && !canReviewRequests()) {
         switchTab('portal');
       }
     }
 
+    async function registerPersistentSessionInCloud() {
+      if (!currentUser) return;
+      try {
+        await fetch(CLOUD_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'register_session',
+            idToken: currentUser.idToken,
+            userEmail: currentUser.email,
+            sessionKey: currentUser.sessionKey
+          })
+        });
+      } catch (e) {}
+    }
+
     function logoutUser() {
+      if (currentUser) {
+        try {
+          fetch(CLOUD_API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'logout',
+              userEmail: currentUser.email,
+              sessionKey: currentUser.sessionKey
+            })
+          });
+        } catch (e) {}
+      }
       currentUser = null;
-      sessionStorage.removeItem('ghayth_auth_user');
+      localStorage.removeItem('ghayth_persistent_user');
       if (window.google && google.accounts && google.accounts.id) {
         google.accounts.id.disableAutoSelect();
       }
@@ -807,7 +848,7 @@
         const perm = getUserPerm();
         const memberRec = getCurrentMemberRecord();
         let roleText = '🙋‍♂️ بوابة المتطوع';
-        if (perm && perm.role === 'admin') roleText = '👑 مدير نظام (صلاحية كاملة)';
+        if (perm && perm.role === 'admin') roleText = '👑 مدير نظام (جلسة دائمة)';
         else if (perm) roleText = '🛡️ مشرف مهام معتمد';
         else if (memberRec) roleText = '✅ متطوع معتمد في الجمعية';
         document.getElementById('user-role-badge').textContent = roleText;
@@ -864,7 +905,6 @@
       }
     }
 
-    // تطبيق وتحديث النطاق ومعلومات الجمعية العامة لدى الجميع
     function applySettingsUI() {
       document.getElementById('header-org-name').textContent = settings.orgName;
       document.getElementById('header-org-en').textContent = settings.orgEnName;
@@ -1006,13 +1046,10 @@
       }
     }
 
+    // حفظ ومزامنة مستمرة دون انتهاء صلاحية الجلسة أبداً إلا بتسجيل الخروج
     async function pushToCloud() {
       if (!canEditData() && !canReviewRequests() && !isAdmin()) return;
-      if (!currentUser || !currentUser.idToken || isTokenExpired(currentUser.idToken)) {
-        setSyncStatus("⚠️ انتهت الجلسة - أعد الدخول", "bg-rose-600 text-white");
-        alert("انتهت صلاحية جلسة الدخول الأمنية (تستمر لساعة واحدة). يرجى تسجيل الخروج ثم الدخول مجدداً بحساب Google لحفظ تعديلاتك ومزامنتها مع الجميع.");
-        return;
-      }
+      if (!currentUser) return;
 
       setSyncStatus("⏳ جاري الحفظ والمزامنة...", "bg-amber-500 text-slate-950");
       try {
@@ -1021,7 +1058,9 @@
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
-            idToken: currentUser.idToken,
+            idToken: isTokenExpired(currentUser.idToken) ? "" : currentUser.idToken,
+            userEmail: currentUser.email,
+            sessionKey: currentUser.sessionKey,
             settings,
             members,
             initiatives,
@@ -1047,7 +1086,6 @@
       pushToCloud();
     }
 
-    // لوحة التحليل الذكي لأيام وأوقات توفر المتطوعين
     function renderAvailabilityAnalytics() {
       const container = document.getElementById('availability-analytics-container');
       const peakBadge = document.getElementById('peak-availability-badge');
@@ -1116,7 +1154,6 @@
       `;
     }
 
-    // الخريطة التفاعلية لانتشار المتطوعين
     function renderVolunteersMap() {
       const mapEl = document.getElementById('volunteers-map');
       if (!mapEl || typeof L === 'undefined') return;
@@ -1465,7 +1502,9 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'update_my_profile',
-            idToken: currentUser.idToken,
+            idToken: isTokenExpired(currentUser.idToken) ? "" : currentUser.idToken,
+            userEmail: currentUser.email,
+            sessionKey: currentUser.sessionKey,
             profile: memberRec
           })
         });
@@ -1505,10 +1544,7 @@
     }
 
     async function sendVolunteerRequestToCloud(reqObj) {
-      if (!currentUser || isTokenExpired(currentUser.idToken)) {
-        alert("انتهت صلاحية جلسة الدخول. يرجى تسجيل الخروج والدخول مجدداً بحساب Google.");
-        return;
-      }
+      if (!currentUser) return;
       setSyncStatus("⏳ جاري إرسال الطلب...", "bg-amber-500 text-slate-950");
       try {
         await fetch(CLOUD_API_URL, {
@@ -1517,7 +1553,9 @@
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'submit_request',
-            idToken: currentUser.idToken,
+            idToken: isTokenExpired(currentUser.idToken) ? "" : currentUser.idToken,
+            userEmail: currentUser.email,
+            sessionKey: currentUser.sessionKey,
             request: reqObj
           })
         });
