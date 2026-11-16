@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-  <!-- مكتبة تسجيل الدخول الرسمية من Google -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     tailwind.config = {
@@ -54,7 +53,6 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 17.657l-.707.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
-          <!-- زر تغيير الشعار يظهر للمصرح لهم فقط -->
           <label for="logo-upload" class="edit-only hidden cursor-pointer mt-1 block text-[11px] text-center text-teal-100 hover:text-amber-300 underline">
             تغيير الشعار
           </label>
@@ -76,8 +74,17 @@
       <!-- أزرار التصدير وتسجيل الدخول -->
       <div class="flex flex-wrap items-center gap-2">
         <!-- منطقة تسجيل الدخول عبر Google -->
-        <div id="auth-guest-box" class="flex items-center">
+        <div id="auth-guest-box" class="flex items-center gap-2">
           <div id="google-signin-btn"></div>
+          <button id="fallback-signin-btn" onclick="triggerGoogleSignIn()" class="bg-white hover:bg-slate-100 text-slate-900 text-xs md:text-sm font-extrabold px-3.5 py-2 rounded-xl shadow flex items-center gap-2 transition">
+            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
+              <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
+            </svg>
+            <span>دخول الإدارة (Google)</span>
+          </button>
         </div>
 
         <!-- بطاقة المستخدم المسجل -->
@@ -119,7 +126,6 @@
         <button onclick="switchTab('initiatives')" id="tab-initiatives" class="nav-btn px-4 py-2 rounded-lg text-teal-100 hover:bg-white/10 transition whitespace-nowrap">
           🚀 إدارة المبادرات وساعات التطوع
         </button>
-        <!-- تبويب إدارة الصلاحيات (يظهر لمديري النظام فقط) -->
         <button onclick="switchTab('permissions')" id="tab-permissions" class="admin-only hidden nav-btn px-4 py-2 rounded-lg text-amber-300 hover:bg-white/10 transition whitespace-nowrap">
           🔐 إدارة الصلاحيات والمستخدمين
         </button>
@@ -294,7 +300,6 @@
           </div>
         </div>
 
-        <!-- نموذج إضافة مستخدم مصرح له -->
         <form onsubmit="addPermissionUser(event)" class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid sm:grid-cols-4 gap-3 items-end mb-6 text-sm">
           <div>
             <label class="block font-bold text-xs mb-1">البريد الإلكتروني (Gmail) *</label>
@@ -316,7 +321,6 @@
           </button>
         </form>
 
-        <!-- جدول المستخدمين المصرح لهم -->
         <div class="overflow-x-auto">
           <table class="w-full text-sm text-right border-collapse">
             <thead>
@@ -451,13 +455,8 @@
   </div>
 
   <script>
-    // 1. ضع هنا Google Client ID الخاص بك من Google Cloud Console:
-    const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
-
-    // 2. رابط Google Apps Script Web App للمزامنة السحابية:
+    const GOOGLE_CLIENT_ID = "401484270892-undd1pnffs1oa66vbhnb75fkflmqs29n.apps.googleusercontent.com";
     const CLOUD_API_URL = "https://script.google.com/macros/s/AKfycbzgCsmd3ofQO2yMq_gIdEkHYgCcfu1trP5SJfUyagzEuYHt95Tyl1w3VvXuptQ5ko-o/exec";
-
-    // المشرفون الأساسيون الافتراضيون
     const SUPER_ADMINS = ["anwar2n@gmail.com", "ghaythforhumanity@gmail.com"];
 
     const DEFAULT_MEMBERS = [
@@ -510,11 +509,9 @@
     let members = JSON.parse(localStorage.getItem('ghayth_members_v1')) || DEFAULT_MEMBERS;
     let initiatives = JSON.parse(localStorage.getItem('ghayth_initiatives_v1')) || DEFAULT_INITIATIVES;
     let permissions = JSON.parse(localStorage.getItem('ghayth_perms_v1')) || SUPER_ADMINS.map(e => ({ email: e, name: 'مدير النظام الرئيسي', role: 'admin', addedAt: 'أساسي' }));
-
-    // بيانات جلسة المستخدم الحالي
     let currentUser = JSON.parse(sessionStorage.getItem('ghayth_auth_user')) || null;
+    let googleAuthReady = false;
 
-    // فك تشفير JWT من Google محلياً لعرض الاسم والصورة
     function parseJwt(token) {
       try {
         const base64Url = token.split('.')[1];
@@ -526,7 +523,6 @@
       }
     }
 
-    // استجابة تسجيل الدخول من Google
     function handleGoogleCredentialResponse(response) {
       const payload = parseJwt(response.credential);
       if (!payload || !payload.email) {
@@ -573,14 +569,12 @@
       return currentUser && currentUser.role === 'admin';
     }
 
-    // تحديث عناصر الواجهة بناءً على صلاحيات المستخدم الحالي
     function applyAuthUI() {
       const guestBox = document.getElementById('auth-guest-box');
       const userBox = document.getElementById('auth-user-box');
       const banner = document.getElementById('readonly-banner');
 
       if (currentUser) {
-        // إعادة التحقق من الصلاحية في حال تم تعديلها سحابياً
         const isSuper = SUPER_ADMINS.includes(currentUser.email);
         const permEntry = permissions.find(p => p.email.toLowerCase().trim() === currentUser.email);
         if (!isSuper && !permEntry) {
@@ -608,32 +602,41 @@
         banner.classList.remove('hidden');
       }
 
-      // إظهار أو إخفاء أزرار التعديل
       document.querySelectorAll('.edit-only').forEach(el => {
         if (canEdit()) el.classList.remove('hidden');
         else el.classList.add('hidden');
       });
 
-      // إظهار أو إخفاء تبويب إدارة الصلاحيات
       document.querySelectorAll('.admin-only').forEach(el => {
         if (isAdmin()) el.classList.remove('hidden');
         else el.classList.add('hidden');
       });
     }
 
-    // تهيئة زر تسجيل الدخول من Google
     function initGoogleAuth() {
       if (window.google && google.accounts && google.accounts.id) {
         google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleCredentialResponse
+          callback: handleGoogleCredentialResponse,
+          use_fedcm_for_prompt: false
         });
         google.accounts.id.renderButton(
           document.getElementById("google-signin-btn"),
           { theme: "outline", size: "medium", text: "signin_with", shape: "pill", locale: "ar" }
         );
+        googleAuthReady = true;
+        const fallbackBtn = document.getElementById("fallback-signin-btn");
+        if (fallbackBtn) fallbackBtn.classList.add("hidden");
       } else {
-        setTimeout(initGoogleAuth, 300);
+        setTimeout(initGoogleAuth, 400);
+      }
+    }
+
+    function triggerGoogleSignIn() {
+      if (googleAuthReady && window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.prompt();
+      } else {
+        alert("تعذر تحميل نافذة تسجيل الدخول من Google حالياً. تأكد من اتصالك بالإنترنت أو عطّل مانع الإعلانات (AdBlocker) ثم حدّث الصفحة.");
       }
     }
 
@@ -648,7 +651,7 @@
       try {
         const res = await fetch(CLOUD_API_URL);
         const cloudData = await res.json();
-        if (cloudData.members && cloudData.initiatives) {
+        if (cloudData.members && cloudData.initiatives && !cloudData.empty) {
           members = cloudData.members;
           initiatives = cloudData.initiatives;
           localStorage.setItem('ghayth_members_v1', JSON.stringify(members));
@@ -667,7 +670,7 @@
         setSyncStatus("✅ متزامن سحابياً", "bg-emerald-500 text-white");
         if (manual) alert("تم تحديث البيانات والصلاحيات من السحابة بنجاح!");
       } catch (err) {
-        setSyncStatus("⚠️ تعذر الاتصال بالسحابة", "bg-rose-600 text-white");
+        setSyncStatus("⚠️ وضع محلي", "bg-amber-600 text-white");
       }
     }
 
@@ -705,7 +708,6 @@
       pushToCloud();
     }
 
-    // إدارة الصلاحيات (Admin فقط)
     function renderPermissions() {
       const tbody = document.getElementById('permissions-table-body');
       if (!tbody) return;
@@ -986,4 +988,224 @@
               <span>👥 ${init.volunteers} متطوع</span>
               <span>⏱️ ${init.hours} ساعة</span>
             </div>
-            ${editable ? `<button onclick="
+            ${editable ? `<button onclick="deleteInitiative('${init.id}')" class="text-rose-600 hover:underline font-bold">حذف</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addRoleRow(title = '', level = 'committee') {
+      const container = document.getElementById('roles-inputs-container');
+      const div = document.createElement('div');
+      div.className = 'flex items-center gap-2 role-row';
+      div.innerHTML = `
+        <input type="text" class="role-title flex-1 border bg-white rounded-lg px-3 py-1.5 text-xs" placeholder="المسمى الوظيفي أو اللجنة..." value="${title}" required />
+        <select class="role-level border bg-white rounded-lg px-2 py-1.5 text-xs">
+          <option value="board" ${level === 'board' ? 'selected' : ''}>مجلس الإدارة</option>
+          <option value="executive" ${level === 'executive' ? 'selected' : ''}>الإدارة التنفيذية</option>
+          <option value="committee" ${level === 'committee' ? 'selected' : ''}>لجنة / مبادرة</option>
+          <option value="volunteer" ${level === 'volunteer' ? 'selected' : ''}>متطوع ميداني</option>
+        </select>
+        <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 font-bold px-2 hover:bg-rose-50 rounded">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function openMemberModal(id = null) {
+      if (!canEdit()) return;
+      const modal = document.getElementById('member-modal');
+      const container = document.getElementById('roles-inputs-container');
+      container.innerHTML = '';
+
+      if (id) {
+        const m = members.find(x => x.id === id);
+        document.getElementById('member-modal-title').textContent = 'تعديل بيانات ومناصب: ' + m.name;
+        document.getElementById('m-id').value = m.id;
+        document.getElementById('m-name').value = m.name;
+        document.getElementById('m-gov').value = m.gov;
+        document.getElementById('m-phone').value = m.phone || '';
+        document.getElementById('m-hours').value = m.hours || 0;
+        document.getElementById('m-initiatives').value = (m.initiatives || []).join('، ');
+        document.getElementById('m-bio').value = m.bio || '';
+        (m.roles || []).forEach(r => addRoleRow(r.title, r.level));
+      } else {
+        document.getElementById('member-modal-title').textContent = 'إضافة عضو / متطوع جديد';
+        document.getElementById('member-form').reset();
+        document.getElementById('m-id').value = '';
+        addRoleRow('متطوع ميداني', 'volunteer');
+      }
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeMemberModal() {
+      const modal = document.getElementById('member-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function saveMember(e) {
+      e.preventDefault();
+      if (!canEdit()) return;
+      const id = document.getElementById('m-id').value;
+      const roleRows = document.querySelectorAll('#roles-inputs-container .role-row');
+      const roles = Array.from(roleRows).map(row => ({
+        title: row.querySelector('.role-title').value.trim(),
+        level: row.querySelector('.role-level').value
+      })).filter(r => r.title);
+
+      if (roles.length === 0) { alert('يرجى إضافة منصب واحد على الأقل.'); return; }
+
+      const initiativesArr = document.getElementById('m-initiatives').value.split(/[,،]/).map(s => s.trim()).filter(Boolean);
+      const memberObj = {
+        id: id || 'm_' + Date.now(),
+        name: document.getElementById('m-name').value.trim(),
+        gov: document.getElementById('m-gov').value,
+        phone: document.getElementById('m-phone').value.trim(),
+        hours: Number(document.getElementById('m-hours').value || 0),
+        roles,
+        initiatives: initiativesArr,
+        bio: document.getElementById('m-bio').value.trim()
+      };
+
+      if (id) {
+        const idx = members.findIndex(x => x.id === id);
+        members[idx] = memberObj;
+      } else {
+        members.unshift(memberObj);
+      }
+      saveData();
+      closeMemberModal();
+    }
+
+    function deleteMember(id) {
+      if (!canEdit()) return;
+      if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
+        members = members.filter(m => m.id !== id);
+        saveData();
+      }
+    }
+
+    function openInitiativeModal() {
+      if (!canEdit()) return;
+      document.getElementById('initiative-modal').classList.remove('hidden');
+      document.getElementById('initiative-modal').classList.add('flex');
+    }
+
+    function closeInitiativeModal() {
+      document.getElementById('initiative-modal').classList.add('hidden');
+      document.getElementById('initiative-modal').classList.remove('flex');
+    }
+
+    function saveInitiative(e) {
+      e.preventDefault();
+      if (!canEdit()) return;
+      initiatives.unshift({
+        id: 'i_' + Date.now(),
+        title: document.getElementById('i-title').value.trim(),
+        lead: document.getElementById('i-lead').value.trim(),
+        location: document.getElementById('i-location').value.trim(),
+        volunteers: Number(document.getElementById('i-volunteers').value || 0),
+        hours: Number(document.getElementById('i-hours').value || 0),
+        partners: document.getElementById('i-partners').value.trim(),
+        desc: document.getElementById('i-desc').value.trim()
+      });
+      saveData();
+      closeInitiativeModal();
+      e.target.reset();
+    }
+
+    function deleteInitiative(id) {
+      if (!canEdit()) return;
+      if (confirm('حذف هذه المبادرة؟')) {
+        initiatives = initiatives.filter(i => i.id !== id);
+        saveData();
+      }
+    }
+
+    function exportToExcel() {
+      const wb = XLSX.utils.book_new();
+      const ws1 = XLSX.utils.json_to_sheet(members.map(m => ({
+        'الاسم الكامل': m.name, 'المحافظة': m.gov, 'المنصب الرئيسي': m.roles[0] ? m.roles[0].title : '',
+        'كافة المناصب واللجان': m.roles.map(r => r.title).join(' | '), 'عدد المناصب': m.roles.length,
+        'ساعات التطوع': m.hours, 'المبادرات': (m.initiatives || []).join('، '), 'الهاتف': m.phone || '', 'النبذة': m.bio || ''
+      })));
+      XLSX.utils.book_append_sheet(wb, ws1, 'الكادر والمتطوعون');
+
+      const ws2 = XLSX.utils.json_to_sheet(initiatives.map(i => ({
+        'اسم المبادرة': i.title, 'المنسق المسؤول': i.lead, 'الموقع': i.location,
+        'عدد المتطوعين': i.volunteers, 'الساعات المنجزة': i.hours, 'الشركاء': i.partners, 'الوصف': i.desc
+      })));
+      XLSX.utils.book_append_sheet(wb, ws2, 'المبادرات والمشاريع');
+      XLSX.writeFile(wb, 'منصة_التطوع_جمعية_غيث_لأجل_الإنسانية.xlsx');
+    }
+
+    function printCertificate(memberId) {
+      const m = members.find(x => x.id === memberId);
+      const savedLogo = localStorage.getItem('ghayth_logo_v1');
+      const logoTag = savedLogo ? `<img src="${savedLogo}" style="height:80px; margin:0 auto 10px;" />` : '';
+      const printArea = document.getElementById('print-area');
+      printArea.classList.remove('hidden');
+      printArea.innerHTML = `
+        <div style="border: 8px double #0F766E; padding: 40px; text-align: center; font-family: 'Cairo', sans-serif; direction: rtl;">
+          ${logoTag}
+          <h1 style="color: #0B4F4A; font-size: 26px; margin: 0;">جمعية غيث لأجل الإنسانية</h1>
+          <p style="color: #64748B; font-size: 13px; margin: 4px 0 25px;">مرخصة بالقرار رقم 2993 تاريخ 03/08/2025 — وزارة الشؤون الاجتماعية والعمل</p>
+          <h2 style="background: #FEF3C7; color: #92400E; display: inline-block; padding: 8px 30px; border-radius: 30px; font-size: 22px;">شهادة شكر وتقدير تطوعية</h2>
+          <p style="font-size: 16px; margin-top: 25px;">تتقدم إدارة <strong>جمعية غيث لأجل الإنسانية</strong> بجزيل الشكر والتقدير إلى:</p>
+          <h3 style="font-size: 28px; color: #0F766E; margin: 12px 0;">${m.name}</h3>
+          <p style="font-size: 15px; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+            وذلك تقديراً لجهوده/ها المتميزة وعطائه/ها الإنساني بصفة: <strong>${m.roles.map(r => r.title).join('، ')}</strong>،
+            وإتمام <strong>(${m.hours} ساعة تطوعية)</strong> ضمن مبادرات الجمعية في محافظة <strong>${m.gov}</strong>.
+          </p>
+          <div style="display: flex; justify-content: space-around; margin-top: 50px; font-size: 14px;">
+            <div><strong>رئيس مجلس الإدارة</strong><br/>أ. فاطمة الآمنة</div>
+            <div><strong>المدير العام للجمعية</strong><br/>أ. محمد أنور علي العلي</div>
+          </div>
+        </div>
+      `;
+      window.print();
+      printArea.classList.add('hidden');
+    }
+
+    function printReport() {
+      const printArea = document.getElementById('print-area');
+      printArea.classList.remove('hidden');
+      const rows = members.map(m => `
+        <tr>
+          <td style="border:1px solid #cbd5e1; padding:8px;"><strong>${m.name}</strong></td>
+          <td style="border:1px solid #cbd5e1; padding:8px;">${m.roles.map(r => r.title).join(' + ')}</td>
+          <td style="border:1px solid #cbd5e1; padding:8px;">${m.gov}</td>
+          <td style="border:1px solid #cbd5e1; padding:8px;">${m.hours} ساعة</td>
+        </tr>
+      `).join('');
+      printArea.innerHTML = `
+        <div style="font-family: 'Cairo', sans-serif; direction: rtl; padding: 20px;">
+          <h2 style="color:#0B4F4A; margin-bottom:4px;">جمعية غيث لأجل الإنسانية — التقرير التنظيمي وسجل التطوع</h2>
+          <p style="font-size:12px; color:#475569; margin-bottom:20px;">قرار الإشهار رقم 2993 تاريخ 03/08/2025 | نطاق العمل: إدلب، حلب، دمشق، حماة</p>
+          <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:right;">
+            <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">الاسم الكامل</th><th style="border:1px solid #cbd5e1; padding:8px;">المناصب واللجان</th><th style="border:1px solid #cbd5e1; padding:8px;">المحافظة</th><th style="border:1px solid #cbd5e1; padding:8px;">ساعات التطوع</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+      window.print();
+      printArea.classList.add('hidden');
+    }
+
+    function updateAllViews() {
+      updateDashboard();
+      renderMembers();
+      renderOrgChart();
+      renderInitiatives();
+      renderPermissions();
+    }
+
+    applySavedLogo();
+    applyAuthUI();
+    updateAllViews();
+    initGoogleAuth();
+    syncFromCloud();
+  </script>
+</body>
+</html>
