@@ -13,9 +13,7 @@
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['Cairo', 'sans-serif'],
-          },
+          fontFamily: { sans: ['Cairo', 'sans-serif'] },
           colors: {
             ghayth: {
               teal: '#0F766E',
@@ -33,7 +31,6 @@
   <style>
     body { font-family: 'Cairo', sans-serif; background-color: #F8FAFC; color: #1E293B; }
     .org-line-v { width: 2px; background-color: #CBD5E1; margin: 0 auto; }
-    .org-line-h { height: 2px; background-color: #CBD5E1; }
     @media print {
       body * { visibility: hidden; }
       #print-area, #print-area * { visibility: visible; }
@@ -52,7 +49,7 @@
           <div id="logo-container" class="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur border-2 border-white/40 flex items-center justify-center overflow-hidden shadow-inner">
             <img id="org-logo-img" src="" alt="شعار الجمعية" class="hidden w-full h-full object-contain p-1 bg-white" />
             <svg id="org-logo-placeholder" class="w-9 h-9 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 17.657l-.707.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
           <label for="logo-upload" class="cursor-pointer mt-1 block text-[11px] text-center text-teal-100 hover:text-amber-300 underline">
@@ -64,6 +61,7 @@
           <div class="flex items-center gap-2 flex-wrap">
             <h1 class="text-xl md:text-2xl font-extrabold tracking-tight">جمعية غيث لأجل الإنسانية</h1>
             <span class="text-xs bg-amber-500/90 text-slate-950 font-bold px-2.5 py-0.5 rounded-full">Ghayth for Humanity</span>
+            <span id="sync-badge" class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold">⏳ جاري الاتصال بالسحابة...</span>
           </div>
           <p class="text-xs md:text-sm text-teal-100 mt-1">
             مرخصة بالقرار رقم <span class="font-bold text-white">2993</span> تاريخ <span class="font-bold text-white">03/08/2025</span> — وزارة الشؤون الاجتماعية والعمل
@@ -72,16 +70,16 @@
         </div>
       </div>
 
-      <!-- أزرار التصدير السريع -->
+      <!-- أزرار التصدير والمزامنة -->
       <div class="flex flex-wrap items-center gap-2">
+        <button onclick="syncFromCloud(true)" class="bg-sky-600 hover:bg-sky-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
+          <span>🔄</span> تحديث المزامنة
+        </button>
         <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
           <span>📊</span> تصدير Excel
         </button>
         <button onclick="printReport('all')" class="bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition">
           <span>🖨️</span> طباعة / PDF
-        </button>
-        <button onclick="resetDefaultData()" title="استعادة البيانات الافتراضية" class="bg-rose-600/80 hover:bg-rose-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition">
-          ↺ استعادة
         </button>
       </div>
     </div>
@@ -107,10 +105,8 @@
 
   <!-- المحتوى الرئيسي -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
-
-    <!-- 1. تبويب لوحة القيادة -->
+    <!-- 1. لوحة القيادة -->
     <section id="view-dashboard" class="space-y-6">
-      <!-- بطاقات الإحصائيات -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-r-ghayth-teal">
           <p class="text-xs font-bold text-slate-500">إجمالي الكادر والمتطوعين</p>
@@ -134,7 +130,6 @@
         </div>
       </div>
 
-      <!-- نبذة عن الجمعية والقيادة -->
       <div class="grid lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
           <div class="flex items-center justify-between mb-4">
@@ -171,13 +166,13 @@
             </ul>
           </div>
           <div class="mt-5 p-3.5 rounded-xl bg-teal-50 border border-teal-100 text-xs text-teal-900 leading-relaxed">
-            <strong>ملاحظة النظام:</strong> تتيح المنصة إسناد <strong>أكثر من منصب أو لجنة</strong> للعضو الواحد، مع تحديث فوري في الهيكل التنظيمي وملفات التصدير.
+            <strong>المزامنة السحابية مفعّلة:</strong> أي تعديل أو إضافة تُحفظ تلقائياً في سحابة الجمعية وتظهر على الجوال والكمبيوتر فوراً.
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 2. تبويب سجل الكادر والمتطوعين -->
+    <!-- 2. سجل الكادر والمتطوعين -->
     <section id="view-volunteers" class="hidden space-y-5">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -189,7 +184,6 @@
         </button>
       </div>
 
-      <!-- فلاتر البحث -->
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 grid sm:grid-cols-3 gap-3">
         <input type="text" id="search-member" oninput="renderMembers()" placeholder="🔍 ابحث بالاسم، المنصب، المهارة، أو المبادرة..." class="border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-ghayth-teal" />
         <select id="filter-gov" onchange="renderMembers()" class="border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-ghayth-teal">
@@ -208,11 +202,10 @@
         </select>
       </div>
 
-      <!-- بطاقات الأعضاء -->
       <div id="members-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     </section>
 
-    <!-- 3. تبويب الهيكل التنظيمي وتعدد المناصب -->
+    <!-- 3. الهيكل التنظيمي -->
     <section id="view-orgchart" class="hidden space-y-6">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -224,10 +217,8 @@
         </button>
       </div>
 
-      <!-- الشجرة التنظيمية -->
       <div id="org-tree-container" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 overflow-x-auto"></div>
 
-      <!-- جدول مصفوفة تعدد المناصب -->
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
         <h3 class="text-lg font-extrabold text-ghayth-dark mb-3">📑 مصفوفة الأدوار والمناصب المتعددة للكادر</h3>
         <div class="overflow-x-auto">
@@ -247,7 +238,7 @@
       </div>
     </section>
 
-    <!-- 4. تبويب إدارة المبادرات وساعات التطوع -->
+    <!-- 4. المبادرات -->
     <section id="view-initiatives" class="hidden space-y-6">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -261,13 +252,11 @@
 
       <div id="initiatives-grid" class="grid md:grid-cols-2 gap-5"></div>
     </section>
-
   </main>
 
-  <!-- منطقة الطباعة المخفية -->
   <div id="print-area" class="hidden"></div>
 
-  <!-- نافذة إضافة / تعديل عضو أو متطوع (تدعم تعدد المناصب) -->
+  <!-- نافذة إضافة / تعديل عضو -->
   <div id="member-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
       <div class="flex justify-between items-center border-b pb-3 mb-4">
@@ -280,7 +269,7 @@
         <div class="grid sm:grid-cols-2 gap-4">
           <div>
             <label class="block font-bold mb-1">الاسم الكامل *</label>
-            <input type="text" id="m-name" required class="w-full border rounded-xl px-3 py-2" placeholder="مثال: فاطمة الآمنة" />
+            <input type="text" id="m-name" required class="w-full border rounded-xl px-3 py-2" />
           </div>
           <div>
             <label class="block font-bold mb-1">المحافظة / مقر العمل *</label>
@@ -304,10 +293,9 @@
           </div>
         </div>
 
-        <!-- قسم تعدد المناصب -->
         <div class="bg-teal-50/70 border border-teal-200 rounded-xl p-4">
           <div class="flex items-center justify-between mb-2">
-            <label class="font-extrabold text-ghayth-dark">المناصب واللجان المُسندة (يمكن إضافة أكثر من منصب) *</label>
+            <label class="font-extrabold text-ghayth-dark">المناصب واللجان المُسندة *</label>
             <button type="button" onclick="addRoleRow()" class="text-xs bg-ghayth-teal text-white px-2.5 py-1 rounded-lg font-bold hover:bg-ghayth-dark">
               + إضافة منصب آخر
             </button>
@@ -317,17 +305,17 @@
 
         <div>
           <label class="block font-bold mb-1">المبادرات المشارك بها (افصل بينها بفاصلة)</label>
-          <input type="text" id="m-initiatives" class="w-full border rounded-xl px-3 py-2" placeholder="مبادرون، حرفة ورقم، التراث والسلام..." />
+          <input type="text" id="m-initiatives" class="w-full border rounded-xl px-3 py-2" />
         </div>
 
         <div>
           <label class="block font-bold mb-1">النبذة التعريفية والخبرات</label>
-          <textarea id="m-bio" rows="3" class="w-full border rounded-xl px-3 py-2" placeholder="اكتب ملخصاً عن الخبرات والمسؤوليات..."></textarea>
+          <textarea id="m-bio" rows="3" class="w-full border rounded-xl px-3 py-2"></textarea>
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t">
           <button type="button" onclick="closeMemberModal()" class="px-4 py-2 rounded-xl border font-bold text-slate-600 hover:bg-slate-50">إلغاء</button>
-          <button type="submit" class="px-5 py-2 rounded-xl bg-ghayth-teal text-white font-bold hover:bg-ghayth-dark">حفظ البيانات</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-ghayth-teal text-white font-bold hover:bg-ghayth-dark">حفظ ومزامنة</button>
         </div>
       </form>
     </div>
@@ -367,7 +355,7 @@
         </div>
         <div>
           <label class="block font-bold mb-1">الشركاء / الجهات المتعاونة</label>
-          <input type="text" id="i-partners" class="w-full border rounded-xl px-3 py-2" placeholder="مثال: PUI، المديرية العامة للآثار..." />
+          <input type="text" id="i-partners" class="w-full border rounded-xl px-3 py-2" />
         </div>
         <div>
           <label class="block font-bold mb-1">وصف المبادرة وأهدافها</label>
@@ -375,167 +363,123 @@
         </div>
         <div class="flex justify-end gap-2 pt-3 border-t">
           <button type="button" onclick="closeInitiativeModal()" class="px-4 py-2 rounded-xl border font-bold">إلغاء</button>
-          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-700">حفظ المبادرة</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-amber-600 text-white font-bold hover:bg-amber-700">حفظ ومزامنة</button>
         </div>
       </form>
     </div>
   </div>
 
   <script>
-    // البيانات الأساسية لجمعية غيث لأجل الإنسانية
+    // رابط Google Apps Script Web App للمزامنة السحابية:
+    const CLOUD_API_URL = "https://script.google.com/macros/s/AKfycbzgCsmd3ofQO2yMq_gIdEkHYgCcfu1trP5SJfUyagzEuYHt95Tyl1w3VvXuptQ5ko-o/exec";
+
     const DEFAULT_MEMBERS = [
       {
-        id: 'm1',
-        name: 'فاطمة الآمنة',
-        gov: 'إدلب',
-        phone: '+963 900 000 001',
-        hours: 320,
-        roles: [
-          { title: 'رئيس مجلس الإدارة', level: 'board' },
-          { title: 'مشرف البرامج التنموية والتمكين', level: 'committee' }
-        ],
+        id: 'm1', name: 'فاطمة الآمنة', gov: 'إدلب', phone: '+963 900 000 001', hours: 320,
+        roles: [{ title: 'رئيس مجلس الإدارة', level: 'board' }, { title: 'مشرف البرامج التنموية والتمكين', level: 'committee' }],
         initiatives: ['حرفة ورقم', 'مبادرون', 'التراث والسلام في قلعة حارم'],
         bio: 'قائدة مجتمعية تشرف على التخطيط الاستراتيجي للجمعية وتمكين الأسر التي تعيلها نساء والحفاظ على الحرف التراثية.'
       },
       {
-        id: 'm2',
-        name: 'محمد أنور علي العلي',
-        gov: 'إدلب',
-        phone: '+963 951 353 018',
-        hours: 340,
-        roles: [
-          { title: 'المدير العام والقائد التنفيذي', level: 'executive' },
-          { title: 'قائد برنامج مبادرون لتأهيل المتطوعين', level: 'committee' },
-          { title: 'منسق الشراكات الاستراتيجية والوصول الإنساني', level: 'board' }
-        ],
+        id: 'm2', name: 'محمد أنور علي العلي', gov: 'إدلب', phone: '+963 951 353 018', hours: 340,
+        roles: [{ title: 'المدير العام والقائد التنفيذي', level: 'executive' }, { title: 'قائد برنامج مبادرون لتأهيل المتطوعين', level: 'committee' }, { title: 'منسق الشراكات الاستراتيجية والوصول الإنساني', level: 'board' }],
         initiatives: ['مبادرون', 'حرفة ورقم', 'سوريا تستحق الحياة (ERW)', 'التراث والسلام في قلعة حارم'],
         bio: 'حاصل على دبلوم الإدارة المتكاملة للمشاريع، يقود الإدارة التنفيذية وبناء الشراكات المؤسسية وتطوير أنظمة المتابعة الرقمية.'
       },
       {
-        id: 'm3',
-        name: 'إبتهال عدواني',
-        gov: 'إدلب',
-        phone: '+963 900 000 003',
-        hours: 260,
-        roles: [
-          { title: 'أمين السر وعضو مجلس الإدارة', level: 'board' },
-          { title: 'منسقة التوثيق الإداري والحوكمة', level: 'committee' }
-        ],
+        id: 'm3', name: 'إبتهال عدواني', gov: 'إدلب', phone: '+963 900 000 003', hours: 260,
+        roles: [{ title: 'أمين السر وعضو مجلس الإدارة', level: 'board' }, { title: 'منسقة التوثيق الإداري والحوكمة', level: 'committee' }],
         initiatives: ['مبادرون', 'كفالة تعليم الأيتام في تفتناز'],
         bio: 'مسؤولة التوثيق المؤسسي وإدارة محاضر الاجتماعات ومتابعة الامتثال الإداري والقانوني للجمعية.'
       },
       {
-        id: 'm4',
-        name: 'كندا الحوراني',
-        gov: 'دمشق',
-        phone: '+963 900 000 004',
-        hours: 210,
-        roles: [
-          { title: 'منسقة البرامج والمشاريع المجتمعية', level: 'executive' },
-          { title: 'عضو لجنة الإعلام والتواصل', level: 'committee' }
-        ],
+        id: 'm4', name: 'كندا الحوراني', gov: 'دمشق', phone: '+963 900 000 004', hours: 210,
+        roles: [{ title: 'منسقة البرامج والمشاريع المجتمعية', level: 'executive' }, { title: 'عضو لجنة الإعلام والتواصل', level: 'committee' }],
         initiatives: ['حرفة ورقم', 'سوريا تستحق الحياة (ERW)'],
         bio: 'متخصصة في تنسيق الأنشطة الميدانية والتواصل المجتمعي وإدارة حملات التوعية الرقمية والميدانية.'
       },
       {
-        id: 'm5',
-        name: 'إسراء رواس',
-        gov: 'حلب',
-        phone: '+963 900 000 005',
-        hours: 195,
-        roles: [
-          { title: 'مسؤولة المتابعة والتقييم (MEAL)', level: 'executive' },
-          { title: 'عضو لجنة التدريب وبناء القدرات', level: 'committee' }
-        ],
+        id: 'm5', name: 'إسراء رواس', gov: 'حلب', phone: '+963 900 000 005', hours: 195,
+        roles: [{ title: 'مسؤولة المتابعة والتقييم (MEAL)', level: 'executive' }, { title: 'عضو لجنة التدريب وبناء القدرات', level: 'committee' }],
         initiatives: ['مبادرون', 'كفالة تعليم الأيتام في تفتناز'],
         bio: 'تشرف على قياس أثر المشاريع وتصميم استبيانات التقييم الميداني وضمان جودة المخرجات التدريبية.'
       },
       {
-        id: 'm6',
-        name: 'عبد الرزاق بكور',
-        gov: 'حماة',
-        phone: '+963 900 000 006',
-        hours: 230,
-        roles: [
-          { title: 'منسق العمليات الميدانية واللوجستيات', level: 'executive' },
-          { title: 'مسؤول السلامة الميدانية والتوعية', level: 'committee' }
-        ],
+        id: 'm6', name: 'عبد الرزاق بكور', gov: 'حماة', phone: '+963 900 000 006', hours: 230,
+        roles: [{ title: 'منسق العمليات الميدانية واللوجستيات', level: 'executive' }, { title: 'مسؤول السلامة الميدانية والتوعية', level: 'committee' }],
         initiatives: ['سوريا تستحق الحياة (ERW)', 'التراث والسلام في قلعة حارم'],
         bio: 'يدير التنسيق الميداني واللوجستي وتنفيذ جلسات التوعية من مخلفات الحرب وإدارة الفرق التطوعية في الميدان.'
       }
     ];
 
     const DEFAULT_INITIATIVES = [
-      {
-        id: 'i1',
-        title: 'برنامج مبادرون لتمكين المتطوعين',
-        lead: 'محمد أنور علي العلي',
-        location: 'إدلب',
-        volunteers: 45,
-        hours: 540,
-        partners: 'جمعية غيث لأجل الإنسانية',
-        desc: 'برنامج تأهيلي متكامل لتدريب المتطوعين على كتابة المشاريع، القيادة الميدانية، والمبادئ الإنسانية.'
-      },
-      {
-        id: 'i2',
-        title: 'مبادرة حِرفة ورقم (Craft & Click)',
-        lead: 'فاطمة الآمنة',
-        location: 'إدلب',
-        volunteers: 32,
-        hours: 480,
-        partners: 'المديرية العامة للآثار والمتاحف • الاتحاد العام للحرفيين',
-        desc: 'تمكين الأسر التي تعيلها نساء عبر الحفاظ على الحرف التراثية وتسويقها إلكترونياً.'
-      },
-      {
-        id: 'i3',
-        title: 'حملة سوريا تستحق الحياة (التوعية بمخلفات الحرب ERW)',
-        lead: 'عبد الرزاق بكور',
-        location: 'إدلب وحماة',
-        volunteers: 28,
-        hours: 360,
-        partners: 'بالتعاون مع مجموعة استشارات الألغام (MAG)',
-        desc: 'حملة توعية رقمية وميدانية للحد من مخاطر مخلفات الحرب غير المنفجرة وحماية المجتمعات المحلية.'
-      },
-      {
-        id: 'i4',
-        title: 'شراكة صون التراث في قلعة حارم (INTIQAL)',
-        lead: 'محمد أنور علي العلي',
-        location: 'حارم - إدلب',
-        volunteers: 24,
-        hours: 310,
-        partners: 'Première Urgence Internationale (PUI)',
-        desc: 'مشروع مجتمعي لصون التراث الثقافي وتعزيز التماسك المجتمعي حول قلعة حارم التاريخية.'
-      },
-      {
-        id: 'i5',
-        title: 'مبادرة كفالة ودعم تعليم الأيتام في تفتناز',
-        lead: 'إبتهال عدواني',
-        location: 'تفتناز - إدلب',
-        volunteers: 18,
-        hours: 240,
-        partners: 'جمعية غيث لأجل الإنسانية',
-        desc: 'برنامج إرشاد ودعم تعليمي للطلاب الأيتام والمتعثرين دراسياً في المرحلة الابتدائية.'
-      }
+      { id: 'i1', title: 'برنامج مبادرون لتمكين المتطوعين', lead: 'محمد أنور علي العلي', location: 'إدلب', volunteers: 45, hours: 540, partners: 'جمعية غيث لأجل الإنسانية', desc: 'برنامج تأهيلي متكامل لتدريب المتطوعين على كتابة المشاريع، القيادة الميدانية، والمبادئ الإنسانية.' },
+      { id: 'i2', title: 'مبادرة حِرفة ورقم (Craft & Click)', lead: 'فاطمة الآمنة', location: 'إدلب', volunteers: 32, hours: 480, partners: 'المديرية العامة للآثار والمتاحف • الاتحاد العام للحرفيين', desc: 'تمكين الأسر التي تعيلها نساء عبر الحفاظ على الحرف التراثية وتسويقها إلكترونياً.' },
+      { id: 'i3', title: 'حملة سوريا تستحق الحياة (التوعية بمخلفات الحرب ERW)', lead: 'عبد الرزاق بكور', location: 'إدلب وحماة', volunteers: 28, hours: 360, partners: 'بالتعاون مع مجموعة استشارات الألغام (MAG)', desc: 'حملة توعية رقمية وميدانية للحد من مخاطر مخلفات الحرب غير المنفجرة وحماية المجتمعات المحلية.' },
+      { id: 'i4', title: 'شراكة صون التراث في قلعة حارم (INTIQAL)', lead: 'محمد أنور علي العلي', location: 'حارم - إدلب', volunteers: 24, hours: 310, partners: 'Première Urgence Internationale (PUI)', desc: 'مشروع مجتمعي لصون التراث الثقافي وتعزيز التماسك المجتمعي حول قلعة حارم التاريخية.' },
+      { id: 'i5', title: 'مبادرة كفالة ودعم تعليم الأيتام في تفتناز', lead: 'إبتهال عدواني', location: 'تفتناز - إدلب', volunteers: 18, hours: 240, partners: 'جمعية غيث لأجل الإنسانية', desc: 'برنامج إرشاد ودعم تعليمي للطلاب الأيتام والمتعثرين دراسياً في المرحلة الابتدائية.' }
     ];
 
     let members = JSON.parse(localStorage.getItem('ghayth_members_v1')) || DEFAULT_MEMBERS;
     let initiatives = JSON.parse(localStorage.getItem('ghayth_initiatives_v1')) || DEFAULT_INITIATIVES;
 
+    function setSyncStatus(text, colorClass) {
+      const badge = document.getElementById('sync-badge');
+      badge.textContent = text;
+      badge.className = `text-[11px] px-2.5 py-0.5 rounded-full font-bold ${colorClass}`;
+    }
+
+    async function syncFromCloud(manual = false) {
+      setSyncStatus("⏳ جاري المزامنة...", "bg-white/20 text-white");
+      try {
+        const res = await fetch(CLOUD_API_URL);
+        const cloudData = await res.json();
+        if (cloudData.empty) {
+          await pushToCloud();
+        } else if (cloudData.members && cloudData.initiatives) {
+          members = cloudData.members;
+          initiatives = cloudData.initiatives;
+          localStorage.setItem('ghayth_members_v1', JSON.stringify(members));
+          localStorage.setItem('ghayth_initiatives_v1', JSON.stringify(initiatives));
+          if (cloudData.logo) {
+            localStorage.setItem('ghayth_logo_v1', cloudData.logo);
+            applySavedLogo();
+          }
+          updateAllViews();
+        }
+        setSyncStatus("✅ متزامن سحابياً", "bg-emerald-500 text-white");
+        if (manual) alert("تم تحديث البيانات ومزامنتها من السحابة بنجاح!");
+      } catch (err) {
+        setSyncStatus("⚠️ تعذر الاتصال بالسحابة", "bg-rose-600 text-white");
+      }
+    }
+
+    async function pushToCloud() {
+      setSyncStatus("⏳ جاري الحفظ في السحابة...", "bg-amber-500 text-slate-950");
+      try {
+        await fetch(CLOUD_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            members,
+            initiatives,
+            logo: localStorage.getItem('ghayth_logo_v1') || ''
+          })
+        });
+        setSyncStatus("✅ تم الحفظ والمزامنة", "bg-emerald-500 text-white");
+      } catch (err) {
+        setSyncStatus("⚠️ فشل الرفع للسحابة", "bg-rose-600 text-white");
+      }
+    }
+
     function saveData() {
       localStorage.setItem('ghayth_members_v1', JSON.stringify(members));
       localStorage.setItem('ghayth_initiatives_v1', JSON.stringify(initiatives));
       updateAllViews();
+      pushToCloud();
     }
 
-    function resetDefaultData() {
-      if (confirm('هل تريد استعادة البيانات الافتراضية الكاملة لجمعية غيث لأجل الإنسانية؟')) {
-        members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
-        initiatives = JSON.parse(JSON.stringify(DEFAULT_INITIATIVES));
-        saveData();
-      }
-    }
-
-    // إدارة الشعار
     function handleLogoUpload(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -543,6 +487,7 @@
       reader.onload = function(evt) {
         localStorage.setItem('ghayth_logo_v1', evt.target.result);
         applySavedLogo();
+        pushToCloud();
       };
       reader.readAsDataURL(file);
     }
@@ -558,7 +503,6 @@
       }
     }
 
-    // التنقل بين التبويبات
     function switchTab(tabName) {
       ['dashboard', 'volunteers', 'orgchart', 'initiatives'].forEach(t => {
         document.getElementById('view-' + t).classList.add('hidden');
@@ -582,7 +526,6 @@
       return map[level] || map.volunteer;
     }
 
-    // تحديث الإحصائيات ولوحة القيادة
     function updateDashboard() {
       document.getElementById('stat-total-members').textContent = members.length;
       const totalRoles = members.reduce((sum, m) => sum + (m.roles ? m.roles.length : 1), 0);
@@ -607,7 +550,6 @@
       `).join('');
     }
 
-    // عرض بطاقات الكادر والمتطوعين
     function renderMembers() {
       const q = (document.getElementById('search-member').value || '').toLowerCase();
       const gov = document.getElementById('filter-gov').value;
@@ -631,9 +573,7 @@
       grid.innerHTML = filtered.map(m => {
         const rolesHtml = (m.roles || []).map(r => {
           const info = getLevelLabel(r.level);
-          return `<span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border ${info.badge}">
-            ${r.title}
-          </span>`;
+          return `<span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border ${info.badge}">${r.title}</span>`;
         }).join('');
 
         const initsHtml = (m.initiatives || []).map(i =>
@@ -645,9 +585,7 @@
             <div>
               <div class="flex items-start justify-between gap-2">
                 <div class="flex items-center gap-3">
-                  <div class="w-11 h-11 rounded-full bg-ghayth-teal text-white font-extrabold flex items-center justify-center text-lg shrink-0">
-                    ${m.name.charAt(0)}
-                  </div>
+                  <div class="w-11 h-11 rounded-full bg-ghayth-teal text-white font-extrabold flex items-center justify-center text-lg shrink-0">${m.name.charAt(0)}</div>
                   <div>
                     <h3 class="font-extrabold text-base text-slate-900">${m.name}</h3>
                     <p class="text-xs text-slate-500">📍 ${m.gov} • ⏱️ <strong>${m.hours || 0}</strong> ساعة تطوع</p>
@@ -655,20 +593,13 @@
                 </div>
                 ${m.roles.length > 1 ? `<span class="text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded-full">متعدد المناصب (${m.roles.length})</span>` : ''}
               </div>
-
-              <div class="mt-3 flex flex-wrap gap-1.5">
-                ${rolesHtml}
-              </div>
-
+              <div class="mt-3 flex flex-wrap gap-1.5">${rolesHtml}</div>
               <p class="text-xs text-slate-600 mt-3 leading-relaxed">${m.bio || ''}</p>
-
               ${initsHtml ? `<div class="mt-3 flex flex-wrap gap-1">${initsHtml}</div>` : ''}
             </div>
 
             <div class="mt-4 pt-3 border-t flex items-center justify-between gap-2 text-xs">
-              <button onclick="printCertificate('${m.id}')" class="text-amber-700 hover:bg-amber-50 font-bold px-2.5 py-1.5 rounded-lg border border-amber-200 transition">
-                🏅 شهادة تطوع
-              </button>
+              <button onclick="printCertificate('${m.id}')" class="text-amber-700 hover:bg-amber-50 font-bold px-2.5 py-1.5 rounded-lg border border-amber-200 transition">🏅 شهادة تطوع</button>
               <div class="flex gap-1">
                 <button onclick="openMemberModal('${m.id}')" class="text-ghayth-teal hover:bg-teal-50 font-bold px-2.5 py-1.5 rounded-lg">تعديل</button>
                 <button onclick="deleteMember('${m.id}')" class="text-rose-600 hover:bg-rose-50 font-bold px-2.5 py-1.5 rounded-lg">حذف</button>
@@ -679,7 +610,6 @@
       }).join('');
     }
 
-    // عرض الهيكل التنظيمي ومصفوفة المناصب
     function renderOrgChart() {
       const boardMembers = members.filter(m => m.roles.some(r => r.level === 'board'));
       const execMembers = members.filter(m => m.roles.some(r => r.level === 'executive'));
@@ -700,38 +630,22 @@
 
       document.getElementById('org-tree-container').innerHTML = `
         <div class="min-w-[700px] flex flex-col items-center py-4">
-          <!-- قمة الهرم -->
           <div class="bg-ghayth-dark text-white px-6 py-3 rounded-2xl shadow-md text-center">
             <p class="font-extrabold text-base">الجمعية العمومية ومجلس الإدارة</p>
             <p class="text-xs text-teal-200">جمعية غيث لأجل الإنسانية — قرار إشهار 2993</p>
           </div>
           <div class="org-line-v h-6"></div>
-
-          <!-- مستوى مجلس الإدارة -->
           <div class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full mb-3">مجلس الإدارة والقيادة العليا</div>
-          <div class="flex flex-wrap justify-center gap-4">
-            ${renderNodeCards(boardMembers, 'board', 'border-amber-400')}
-          </div>
-
+          <div class="flex flex-wrap justify-center gap-4">${renderNodeCards(boardMembers, 'board', 'border-amber-400')}</div>
           <div class="org-line-v h-8"></div>
-
-          <!-- مستوى الإدارة التنفيذية -->
           <div class="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200 px-3 py-1 rounded-full mb-3">الإدارة التنفيذية وتنسيق البرامج</div>
-          <div class="flex flex-wrap justify-center gap-4">
-            ${renderNodeCards(execMembers, 'executive', 'border-ghayth-teal')}
-          </div>
-
+          <div class="flex flex-wrap justify-center gap-4">${renderNodeCards(execMembers, 'executive', 'border-ghayth-teal')}</div>
           <div class="org-line-v h-8"></div>
-
-          <!-- مستوى اللجان التخصصية -->
-          <div class="text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 py-1 rounded-full mb-3">اللجان التخصصية وإدارة المبادرات (تداخل الأدوار)</div>
-          <div class="flex flex-wrap justify-center gap-4">
-            ${renderNodeCards(commMembers, 'committee', 'border-sky-400')}
-          </div>
+          <div class="text-xs font-bold text-sky-800 bg-sky-50 border border-sky-200 px-3 py-1 rounded-full mb-3">اللجان التخصصية وإدارة المبادرات</div>
+          <div class="flex flex-wrap justify-center gap-4">${renderNodeCards(commMembers, 'committee', 'border-sky-400')}</div>
         </div>
       `;
 
-      // مصفوفة تعدد المناصب
       const matrixBody = document.getElementById('roles-matrix-body');
       matrixBody.innerHTML = members.map(m => {
         const primary = m.roles[0] ? m.roles[0].title : '-';
@@ -742,17 +656,12 @@
             <td class="p-3 text-ghayth-teal font-bold">${primary}</td>
             <td class="p-3">${secondary}</td>
             <td class="p-3 text-xs">${m.gov}</td>
-            <td class="p-3">
-              <button onclick="openMemberModal('${m.id}')" class="text-xs bg-slate-100 hover:bg-ghayth-teal hover:text-white font-bold px-2.5 py-1 rounded-lg transition">
-                إدارة المناصب
-              </button>
-            </td>
+            <td class="p-3"><button onclick="openMemberModal('${m.id}')" class="text-xs bg-slate-100 hover:bg-ghayth-teal hover:text-white font-bold px-2.5 py-1 rounded-lg transition">إدارة المناصب</button></td>
           </tr>
         `;
       }).join('');
     }
 
-    // عرض المبادرات
     function renderInitiatives() {
       const grid = document.getElementById('initiatives-grid');
       grid.innerHTML = initiatives.map(init => `
@@ -779,7 +688,6 @@
       `).join('');
     }
 
-    // إدارة نافذة العضو وتعدد المناصب
     function addRoleRow(title = '', level = 'committee') {
       const container = document.getElementById('roles-inputs-container');
       const div = document.createElement('div');
@@ -819,7 +727,6 @@
         document.getElementById('m-id').value = '';
         addRoleRow('متطوع ميداني', 'volunteer');
       }
-
       modal.classList.remove('hidden');
       modal.classList.add('flex');
     }
@@ -839,16 +746,9 @@
         level: row.querySelector('.role-level').value
       })).filter(r => r.title);
 
-      if (roles.length === 0) {
-        alert('يرجى إضافة منصب واحد على الأقل.');
-        return;
-      }
+      if (roles.length === 0) { alert('يرجى إضافة منصب واحد على الأقل.'); return; }
 
-      const initiativesArr = document.getElementById('m-initiatives').value
-        .split(/[,،]/)
-        .map(s => s.trim())
-        .filter(Boolean);
-
+      const initiativesArr = document.getElementById('m-initiatives').value.split(/[,،]/).map(s => s.trim()).filter(Boolean);
       const memberObj = {
         id: id || 'm_' + Date.now(),
         name: document.getElementById('m-name').value.trim(),
@@ -866,7 +766,6 @@
       } else {
         members.unshift(memberObj);
       }
-
       saveData();
       closeMemberModal();
     }
@@ -878,7 +777,6 @@
       }
     }
 
-    // إدارة المبادرات
     function openInitiativeModal() {
       document.getElementById('initiative-modal').classList.remove('hidden');
       document.getElementById('initiative-modal').classList.add('flex');
@@ -913,57 +811,27 @@
       }
     }
 
-    // التصدير إلى Excel
     function exportToExcel() {
       const wb = XLSX.utils.book_new();
-
-      // ورقة 1: الكادر والمتطوعون
-      const membersSheetData = members.map(m => ({
-        'الاسم الكامل': m.name,
-        'المحافظة': m.gov,
-        'المنصب الرئيسي': m.roles[0] ? m.roles[0].title : '',
-        'كافة المناصب واللجان': m.roles.map(r => r.title).join(' | '),
-        'عدد المناصب': m.roles.length,
-        'ساعات التطوع': m.hours,
-        'المبادرات': (m.initiatives || []).join('، '),
-        'الهاتف': m.phone || '',
-        'النبذة': m.bio || ''
-      }));
-      const ws1 = XLSX.utils.json_to_sheet(membersSheetData);
+      const ws1 = XLSX.utils.json_to_sheet(members.map(m => ({
+        'الاسم الكامل': m.name, 'المحافظة': m.gov, 'المنصب الرئيسي': m.roles[0] ? m.roles[0].title : '',
+        'كافة المناصب واللجان': m.roles.map(r => r.title).join(' | '), 'عدد المناصب': m.roles.length,
+        'ساعات التطوع': m.hours, 'المبادرات': (m.initiatives || []).join('، '), 'الهاتف': m.phone || '', 'النبذة': m.bio || ''
+      })));
       XLSX.utils.book_append_sheet(wb, ws1, 'الكادر والمتطوعون');
 
-      // ورقة 2: المبادرات
-      const initSheetData = initiatives.map(i => ({
-        'اسم المبادرة': i.title,
-        'المنسق المسؤول': i.lead,
-        'الموقع': i.location,
-        'عدد المتطوعين': i.volunteers,
-        'الساعات المنجزة': i.hours,
-        'الشركاء': i.partners,
-        'الوصف': i.desc
-      }));
-      const ws2 = XLSX.utils.json_to_sheet(initSheetData);
+      const ws2 = XLSX.utils.json_to_sheet(initiatives.map(i => ({
+        'اسم المبادرة': i.title, 'المنسق المسؤول': i.lead, 'الموقع': i.location,
+        'عدد المتطوعين': i.volunteers, 'الساعات المنجزة': i.hours, 'الشركاء': i.partners, 'الوصف': i.desc
+      })));
       XLSX.utils.book_append_sheet(wb, ws2, 'المبادرات والمشاريع');
-
-      // ورقة 3: بيانات الجمعية
-      const orgSheetData = [
-        { 'البيان': 'اسم الجمعية', 'التفاصيل': 'جمعية غيث لأجل الإنسانية (Ghayth for Humanity)' },
-        { 'البيان': 'قرار الترخيص', 'التفاصيل': 'قرار رقم 2993 تاريخ 03/08/2025 - وزارة الشؤون الاجتماعية والعمل' },
-        { 'البيان': 'نطاق العمل', 'التفاصيل': 'إدلب، حلب، دمشق، حماة' },
-        { 'البيان': 'البريد الإلكتروني', 'التفاصيل': 'ghaythforhumanity@gmail.com' }
-      ];
-      const ws3 = XLSX.utils.json_to_sheet(orgSheetData);
-      XLSX.utils.book_append_sheet(wb, ws3, 'بيانات الجمعية');
-
       XLSX.writeFile(wb, 'منصة_التطوع_جمعية_غيث_لأجل_الإنسانية.xlsx');
     }
 
-    // الطباعة والشهادات
     function printCertificate(memberId) {
       const m = members.find(x => x.id === memberId);
       const savedLogo = localStorage.getItem('ghayth_logo_v1');
       const logoTag = savedLogo ? `<img src="${savedLogo}" style="height:80px; margin:0 auto 10px;" />` : '';
-
       const printArea = document.getElementById('print-area');
       printArea.classList.remove('hidden');
       printArea.innerHTML = `
@@ -979,12 +847,8 @@
             وإتمام <strong>(${m.hours} ساعة تطوعية)</strong> ضمن مبادرات الجمعية في محافظة <strong>${m.gov}</strong>.
           </p>
           <div style="display: flex; justify-content: space-around; margin-top: 50px; font-size: 14px;">
-            <div>
-              <strong>رئيس مجلس الإدارة</strong><br/>أ. فاطمة الآمنة
-            </div>
-            <div>
-              <strong>المدير العام للجمعية</strong><br/>أ. محمد أنور علي العلي
-            </div>
+            <div><strong>رئيس مجلس الإدارة</strong><br/>أ. فاطمة الآمنة</div>
+            <div><strong>المدير العام للجمعية</strong><br/>أ. محمد أنور علي العلي</div>
           </div>
         </div>
       `;
@@ -992,7 +856,7 @@
       printArea.classList.add('hidden');
     }
 
-    function printReport(type) {
+    function printReport() {
       const printArea = document.getElementById('print-area');
       printArea.classList.remove('hidden');
       const rows = members.map(m => `
@@ -1003,20 +867,12 @@
           <td style="border:1px solid #cbd5e1; padding:8px;">${m.hours} ساعة</td>
         </tr>
       `).join('');
-
       printArea.innerHTML = `
         <div style="font-family: 'Cairo', sans-serif; direction: rtl; padding: 20px;">
           <h2 style="color:#0B4F4A; margin-bottom:4px;">جمعية غيث لأجل الإنسانية — التقرير التنظيمي وسجل التطوع</h2>
           <p style="font-size:12px; color:#475569; margin-bottom:20px;">قرار الإشهار رقم 2993 تاريخ 03/08/2025 | نطاق العمل: إدلب، حلب، دمشق، حماة</p>
           <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:right;">
-            <thead>
-              <tr style="background:#f1f5f9;">
-                <th style="border:1px solid #cbd5e1; padding:8px;">الاسم الكامل</th>
-                <th style="border:1px solid #cbd5e1; padding:8px;">المناصب واللجان المُسندة</th>
-                <th style="border:1px solid #cbd5e1; padding:8px;">المحافظة</th>
-                <th style="border:1px solid #cbd5e1; padding:8px;">ساعات التطوع</th>
-              </tr>
-            </thead>
+            <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">الاسم الكامل</th><th style="border:1px solid #cbd5e1; padding:8px;">المناصب واللجان</th><th style="border:1px solid #cbd5e1; padding:8px;">المحافظة</th><th style="border:1px solid #cbd5e1; padding:8px;">ساعات التطوع</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
         </div>
@@ -1032,9 +888,9 @@
       renderInitiatives();
     }
 
-    // التشغيل الأولي
     applySavedLogo();
     updateAllViews();
+    syncFromCloud();
   </script>
 </body>
 </html>
