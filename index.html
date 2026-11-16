@@ -65,18 +65,17 @@
           <div class="flex items-center gap-2 flex-wrap">
             <h1 id="header-org-name" class="text-xl md:text-2xl font-extrabold tracking-tight">جمعية غيث لأجل الإنسانية</h1>
             <span id="header-org-en" class="text-xs bg-amber-500/90 text-slate-950 font-bold px-2.5 py-0.5 rounded-full">Ghayth for Humanity</span>
-            <span id="sync-badge" class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold">⏳ جاري الاتصال بالسحابة...</span>
+            <span id="sync-badge" class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold">⏳ جاري الاتصال بقاعدة البيانات...</span>
           </div>
           <p id="header-org-subtitle" class="text-xs md:text-sm text-teal-100 mt-1">
             مرخصة بالقرار رقم 2993 تاريخ 03/08/2025 — وزارة الشؤون الاجتماعية والعمل
           </p>
-          <p id="header-org-govs" class="text-xs text-teal-200 mt-0.5">نطاق العمل: كافة المحافظات السورية</p>
+          <p id="header-org-govs" class="text-xs text-teal-200 mt-0.5">نطاق العمل: كافة المحافظات السورية (14 محافظة)</p>
         </div>
       </div>
 
       <!-- أزرار التحكم والإشعارات وتسجيل الدخول -->
       <div class="flex flex-wrap items-center gap-2">
-        <!-- قائمة الإشعارات العلوية للمهام المطلوب تنفيذها (تظهر للمشرفين والمدراء) -->
         <div id="notifications-wrapper" class="reviewer-only hidden relative">
           <button onclick="toggleNotificationsMenu()" class="relative bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2.5 rounded-xl transition flex items-center gap-1.5" title="إشعارات المهام المطلوبة">
             <span class="text-base">🔔</span>
@@ -244,7 +243,7 @@
             </ul>
           </div>
           <div class="mt-5 p-3.5 rounded-xl bg-teal-50 border border-teal-100 text-xs text-teal-900 leading-relaxed">
-            <strong>التسلسل التنظيمي المعتمد:</strong> يقدم المتطوع طلبه ← عند القبول يظهر في السجل والخريطة ← ثم تُسند له المهام الوظيفية ليظهر في الهيكل التنظيمي.
+            <strong>مرتبط سحابياً:</strong> كافة البيانات متزامنة مباشرة مع ملف <em>قاعدة بيانات التطوع - جمعية غيث لأجل الإنسانية</em> على Google Sheets.
           </div>
         </div>
       </div>
@@ -290,7 +289,7 @@
       <div id="members-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
     </section>
 
-    <!-- 3. الهيكل التنظيمي الهرمي التفاعلي (يظهر فقط من أُسندت له مهام تنظيمية) -->
+    <!-- 3. الهيكل التنظيمي الهرمي التفاعلي -->
     <section id="view-orgchart" class="hidden space-y-6">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -356,7 +355,7 @@
           <h2 class="text-xl font-extrabold text-ghayth-dark flex items-center gap-2">
             <span>📥</span> مركز مراجعة طلبات التطوع واعتماد الساعات
           </h2>
-          <p class="text-xs text-slate-500 mt-1">عند قبول طلب الانضمام، يظهر المتطوع تلقائياً في اللوحات الأساسية وسجل المتطوعين والخريطة، ثم يمكنك إسناد المهام له ليظهر في الهيكل التنظيمي.</p>
+          <p class="text-xs text-slate-500 mt-1">عند الضغط على قبول أو رفض، يفتح مربع حوار لتسجيل ملاحظاتك الإدارية وتوثيقها في قاعدة البيانات.</p>
         </div>
         <div id="requests-list-container" class="space-y-4"></div>
       </div>
@@ -434,6 +433,53 @@
 
   <div id="print-area" class="hidden"></div>
 
+  <!-- مربع حوار موافقة / رفض الطلب مع ملاحظات المدير -->
+  <div id="review-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-3 mb-4">
+        <h3 id="review-modal-title" class="text-lg font-extrabold text-ghayth-dark">مراجعة واعتماد الطلب</h3>
+        <button onclick="closeReviewModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+      </div>
+      <form onsubmit="confirmProcessRequest(event)" class="space-y-4 text-sm">
+        <input type="hidden" id="rev-req-id" />
+        <input type="hidden" id="rev-decision" />
+        <div id="rev-req-summary" class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-relaxed"></div>
+
+        <!-- خيار تحديد التزام المتطوع عند قبول الانضمام -->
+        <div id="rev-commitment-box" class="hidden grid sm:grid-cols-2 gap-3 bg-teal-50/60 p-3 rounded-xl border border-teal-200">
+          <div>
+            <label class="block font-bold text-xs mb-1">نظام التزام المتطوع</label>
+            <select id="rev-commitment" onchange="toggleRevCommitmentDays()" class="w-full border bg-white rounded-lg px-2.5 py-1.5 text-xs font-bold">
+              <option value="partial">ملتزم بشكل جزئي</option>
+              <option value="full">ملتزم بشكل كامل</option>
+            </select>
+          </div>
+          <div id="rev-days-wrapper">
+            <label class="block font-bold text-xs mb-1">أيام الالتزام أسبوعياً</label>
+            <select id="rev-commitment-days" class="w-full border bg-white rounded-lg px-2.5 py-1.5 text-xs font-bold">
+              <option value="1">يوم واحد</option>
+              <option value="2" selected>يومان</option>
+              <option value="3">3 أيام</option>
+              <option value="4">4 أيام</option>
+              <option value="5">5 أيام</option>
+              <option value="6">6 أيام</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-xs mb-1">ملاحظات المدير / المشرف (تُحفظ في السجل وتظهر للمتطوع):</label>
+          <textarea id="rev-admin-notes" rows="3" placeholder="اكتب ملاحظاتك أو توجيهاتك للمتطوع حول القبول أو الساعات المعتمدة..." class="w-full border rounded-xl px-3 py-2 text-xs"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="closeReviewModal()" class="px-4 py-2 rounded-xl border font-bold text-slate-600">إلغاء</button>
+          <button type="submit" id="rev-submit-btn" class="px-5 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700">تأكيد الاعتماد والحفظ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- نافذة تعديل الهوية والمعلومات الأساسية -->
   <div id="settings-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl">
@@ -489,7 +535,6 @@
       <form id="member-form" onsubmit="saveMember(event)" class="space-y-4 text-sm">
         <input type="hidden" id="m-id" />
 
-        <!-- اختيار المتطوع من قائمة المتطوعين المقبولين والفعالين حالياً -->
         <div id="member-select-box" class="bg-amber-50/70 border border-amber-200 p-3.5 rounded-xl">
           <label class="block font-extrabold text-xs text-amber-950 mb-1.5">اختر المتطوع من قائمة المتطوعين المقبولين والفعالين حالياً *</label>
           <select id="m-existing-select" onchange="onSelectExistingVolunteer(this.value)" class="w-full border bg-white rounded-xl px-3 py-2 font-bold text-slate-800"></select>
@@ -525,7 +570,6 @@
           </div>
         </div>
 
-        <!-- نوع الالتزام وعدد أيام الالتزام في الأسبوع -->
         <div class="grid sm:grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
           <div>
             <label class="block font-bold text-xs mb-1">نظام الالتزام مع الجمعية *</label>
@@ -643,7 +687,6 @@
     const CLOUD_API_URL = "https://script.google.com/macros/s/AKfycbzgCsmd3ofQO2yMq_gIdEkHYgCcfu1trP5SJfUyagzEuYHt95Tyl1w3VvXuptQ5ko-o/exec";
     const SUPER_ADMINS = ["anwar2n@gmail.com", "ghaythforhumanity@gmail.com"];
 
-    // قاعدة بيانات الدول والمحافظات (سوريا افتراضياً مع كافة محافظاتها الـ 14 + بقية الدول)
     const COUNTRIES_DATA = {
       "سوريا": ["إدلب", "حلب", "دمشق", "ريف دمشق", "حماة", "حمص", "اللاذقية", "طرطوس", "درعا", "السويداء", "القنيطرة", "دير الزور", "الحسكة", "الرقة"],
       "تركيا": ["إسطنبول", "غازي عنتاب", "هاتاي (أنطاكيا)", "أورفا", "مرسين", "أضنة", "أنقرة", "قونية", "بورصة", "ولاية أخرى"],
@@ -790,7 +833,6 @@
     let markersLayer = null;
     let tempCapturedCoords = { lat: null, lng: null };
 
-    // تعبئة قائمة الدول والمحافظات ديناميكياً (الافتراضي: سوريا + كافة المحافظات السورية الـ 14)
     function populateCountriesDropdown(countrySelectId, govSelectId, selectedCountry = "سوريا", selectedGov = "") {
       const cSel = document.getElementById(countrySelectId);
       if (!cSel) return;
@@ -1132,9 +1174,9 @@
     }
 
     async function syncFromCloud(manual = false) {
-      setSyncStatus("⏳ جاري المزامنة...", "bg-white/20 text-white");
+      setSyncStatus("⏳ جاري المزامنة مع Google Sheets...", "bg-white/20 text-white");
       try {
-        const res = await fetch(CLOUD_API_URL + "?t=" + Date.now());
+        const res = await fetch(CLOUD_API_URL + "?t=" + Date.now(), { redirect: 'follow' });
         const cloudData = await res.json();
         if (cloudData.settings) {
           settings = cloudData.settings;
@@ -1161,8 +1203,8 @@
         applySettingsUI();
         applyAuthUI();
         updateAllViews();
-        setSyncStatus("✅ متزامن سحابياً", "bg-emerald-500 text-white");
-        if (manual) alert("تمت مزامنة كافة البيانات والنطاق الجغرافي والخريطة بنجاح!");
+        setSyncStatus("✅ متزامن مع قاعدة البيانات", "bg-emerald-500 text-white");
+        if (manual) alert("تمت مزامنة كافة البيانات مع ملف قاعدة بيانات التطوع في Google Sheets بنجاح!");
       } catch (err) {
         setSyncStatus("⚠️ وضع محلي", "bg-amber-600 text-white");
       }
@@ -1172,11 +1214,12 @@
       if (!canEditData() && !canReviewRequests() && !isAdmin()) return;
       if (!currentUser) return;
 
-      setSyncStatus("⏳ جاري الحفظ والمزامنة...", "bg-amber-500 text-slate-950");
+      setSyncStatus("⏳ جاري الحفظ في Google Sheets...", "bg-amber-500 text-slate-950");
       try {
         await fetch(CLOUD_API_URL, {
           method: 'POST',
           mode: 'no-cors',
+          redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             idToken: isTokenExpired(currentUser.idToken) ? "" : currentUser.idToken,
@@ -1190,7 +1233,7 @@
             logo: localStorage.getItem('ghayth_logo_v2') || ''
           })
         });
-        setTimeout(() => syncFromCloud(false), 1200);
+        setTimeout(() => syncFromCloud(false), 1500);
       } catch (err) {
         setSyncStatus("⚠️ فشل الرفع للسحابة", "bg-rose-600 text-white");
       }
@@ -1362,11 +1405,17 @@
       `).join('');
 
       if (!memberRec) {
-        const hasPendingJoin = myRequests.some(r => r.type === 'join' && r.status === 'pending');
+        const latestJoin = myRequests.find(r => r.type === 'join');
+        const hasPendingJoin = latestJoin && latestJoin.status === 'pending';
         container.innerHTML = `
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-3xl mx-auto">
             <h2 class="text-xl font-extrabold text-ghayth-dark mb-1">🤝 طلب الانضمام كمتطوع في الجمعية</h2>
             <p class="text-xs text-slate-600 mb-5">مرحباً <strong>${currentUser.name}</strong> (${currentUser.email}). أكمل بياناتك الجغرافية وأوقات تطوعك المفضلة ليتم إرسال طلبك فوراً لإدارة الجمعية.</p>
+            ${latestJoin && latestJoin.adminNotes ? `
+              <div class="mb-4 p-3.5 rounded-xl bg-sky-50 border border-sky-200 text-xs text-sky-950">
+                <strong>💬 ملاحظات الإدارة على طلبك:</strong> ${latestJoin.adminNotes}
+              </div>
+            ` : ''}
             ${hasPendingJoin ? `
               <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-sm font-bold">
                 ⏳ لديك طلب انضمام قيد المراجعة حالياً. تم إرسال إشعار للإدارة وسيتم إضافتك للسجل فور الاعتماد.
@@ -1446,6 +1495,7 @@
             <div>
               <p class="font-bold text-slate-900">${r.type === 'hours' ? `تسجيل (${r.hours} ساعة) — ${r.initiative}` : 'طلب انضمام للجمعية'}</p>
               <p class="text-slate-500 mt-0.5">${r.notes || ''} • بتاريخ ${r.createdAt || ''}</p>
+              ${r.adminNotes ? `<p class="text-ghayth-dark font-bold mt-1">💬 ملاحظات الإدارة: ${r.adminNotes}</p>` : ''}
             </div>
             ${statusBadge}
           </div>
@@ -1612,11 +1662,12 @@
       localStorage.setItem('ghayth_members_v2', JSON.stringify(members));
       updateAllViews();
 
-      setSyncStatus("⏳ جاري حفظ ملفك...", "bg-amber-500 text-slate-950");
+      setSyncStatus("⏳ جاري حفظ ملفك في Google Sheets...", "bg-amber-500 text-slate-950");
       try {
         await fetch(CLOUD_API_URL, {
           method: 'POST',
           mode: 'no-cors',
+          redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'update_my_profile',
@@ -1626,7 +1677,7 @@
             profile: memberRec
           })
         });
-        setSyncStatus("✅ تم تحديث ملفك", "bg-emerald-500 text-white");
+        setSyncStatus("✅ متزامن مع قاعدة البيانات", "bg-emerald-500 text-white");
         alert("تم حفظ بيانات ملفك الشخصي وموقعك وتفضيلاتك بنجاح!");
       } catch (err) {}
     }
@@ -1666,6 +1717,7 @@
         await fetch(CLOUD_API_URL, {
           method: 'POST',
           mode: 'no-cors',
+          redirect: 'follow',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'submit_request',
@@ -1682,7 +1734,7 @@
         setSyncStatus("✅ تم إرسال الطلب", "bg-emerald-500 text-white");
         applyAuthUI();
         updateAllViews();
-        alert("تم إرسال طلبك بنجاح وإشعار المسؤولين عبر البريد الإلكتروني ولوحة الإشعارات.");
+        alert("تم إرسال طلبك بنجاح وحفظه في قاعدة بيانات الجمعية.");
       } catch (err) {
         alert("تعذر إرسال الطلب، يرجى التحقق من الاتصال بالإنترنت.");
       }
@@ -1750,8 +1802,8 @@
 
         const actionArea = r.status === 'pending' ? `
           <div class="flex gap-2">
-            <button onclick="processRequest('${r.id}', 'approved')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition">✅ قبول واعتماد</button>
-            <button onclick="processRequest('${r.id}', 'rejected')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 text-xs font-bold px-3.5 py-1.5 rounded-lg transition">❌ رفض</button>
+            <button onclick="openReviewModal('${r.id}', 'approved')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition">✅ مراجعة وقبول</button>
+            <button onclick="openReviewModal('${r.id}', 'rejected')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 text-xs font-bold px-3.5 py-1.5 rounded-lg transition">❌ رفض</button>
           </div>
         ` : (r.status === 'approved'
           ? `<span class="text-xs font-bold text-emerald-700">✅ مقبول ومُرحّل للسجل ${r.reviewedBy ? '(' + r.reviewedBy + ')' : ''}</span>`
@@ -1770,6 +1822,7 @@
                   ? `📍 ${r.country || 'سوريا'} - <strong>${r.gov}</strong> (${r.address || ''}) • 📱 ${r.phone || ''} ${r.lat ? `• GPS: ${r.lat}, ${r.lng}` : ''}<br/>📅 الأيام: ${(r.prefDays || []).join('، ')} | ⏰ الأوقات: ${(r.prefTimes || []).join('، ')}<br/>الخبرات: ${r.notes}`
                   : `🚀 المبادرة: <strong>${r.initiative}</strong> — التفاصيل: ${r.notes}`}
               </p>
+              ${r.adminNotes ? `<p class="text-xs text-ghayth-dark font-bold bg-teal-50 px-2.5 py-1 rounded-lg inline-block">💬 ملاحظات المدير: ${r.adminNotes}</p>` : ''}
               <p class="text-[11px] text-slate-400">رقم الطلب: ${r.id} • التاريخ: ${r.createdAt || '-'}</p>
             </div>
             ${actionArea}
@@ -1778,13 +1831,69 @@
       }).join('');
     }
 
-    // التسلسل: عند قبول طلب التطوع يظهر في اللوحات الأساسية وسجل المتطوعين والخريطة (بدون مهام تنظيمية بعد حتى تُسند له)
-    function processRequest(reqId, decision) {
+    // فتح مربع حوار الموافقة أو الرفض مع خانة ملاحظات المدير
+    function openReviewModal(reqId, decision) {
+      const req = requests.find(r => r.id === reqId);
+      if (!req) return;
+      document.getElementById('rev-req-id').value = reqId;
+      document.getElementById('rev-decision').value = decision;
+      document.getElementById('rev-admin-notes').value = '';
+
+      const isApprove = decision === 'approved';
+      const isJoin = req.type === 'join';
+      document.getElementById('review-modal-title').textContent = isApprove
+        ? (isJoin ? '✅ الموافقة على انضمام المتطوع' : '✅ اعتماد ساعات التطوع')
+        : '❌ رفض الطلب مع ذكر السبب';
+
+      const submitBtn = document.getElementById('rev-submit-btn');
+      submitBtn.textContent = isApprove ? 'تأكيد الموافقة والحفظ' : 'تأكيد الرفض والحفظ';
+      submitBtn.className = isApprove
+        ? 'px-5 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700'
+        : 'px-5 py-2 rounded-xl bg-rose-600 text-white font-bold hover:bg-rose-700';
+
+      const commitBox = document.getElementById('rev-commitment-box');
+      if (isApprove && isJoin) {
+        commitBox.classList.remove('hidden');
+        document.getElementById('rev-commitment').value = 'partial';
+        toggleRevCommitmentDays();
+      } else {
+        commitBox.classList.add('hidden');
+      }
+
+      document.getElementById('rev-req-summary').innerHTML = isJoin
+        ? `<strong>المتقدم:</strong> ${req.name} (${req.email})<br/><strong>الموقع:</strong> ${req.country || 'سوريا'} - ${req.gov} (${req.address || '-'})<br/><strong>الخبرات:</strong> ${req.notes}`
+        : `<strong>المتطوع:</strong> ${req.name}<br/><strong>المبادرة:</strong> ${req.initiative} — <strong>الساعات المطلوبة:</strong> ${req.hours} ساعة<br/><strong>التفاصيل:</strong> ${req.notes}`;
+
+      const modal = document.getElementById('review-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function toggleRevCommitmentDays() {
+      const val = document.getElementById('rev-commitment').value;
+      const box = document.getElementById('rev-days-wrapper');
+      if (val === 'partial') box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function closeReviewModal() {
+      document.getElementById('review-modal').classList.add('hidden');
+      document.getElementById('review-modal').classList.remove('flex');
+    }
+
+    function confirmProcessRequest(e) {
+      e.preventDefault();
+      const reqId = document.getElementById('rev-req-id').value;
+      const decision = document.getElementById('rev-decision').value;
+      const adminNotes = document.getElementById('rev-admin-notes').value.trim();
+
       const req = requests.find(r => r.id === reqId);
       if (!req) return;
 
       if (decision === 'approved') {
         if (req.type === 'join' && canApproveJoin()) {
+          const commitVal = document.getElementById('rev-commitment').value;
+          const commitDays = commitVal === 'partial' ? Number(document.getElementById('rev-commitment-days').value || 2) : 6;
           members.unshift({
             id: 'm_' + Date.now(),
             name: req.name,
@@ -1796,13 +1905,14 @@
             lng: req.lng || '',
             phone: req.phone,
             hours: 0,
-            commitment: 'partial',
-            commitmentDays: 2,
-            roles: [], // مصفوفة المهام فارغة مبدئياً فلا يظهر في الهيكل التنظيمي إلا بعد إسناد مهام له
+            commitment: commitVal,
+            commitmentDays: commitDays,
+            roles: [],
             initiatives: [],
             prefDays: req.prefDays || [],
             prefTimes: req.prefTimes || [],
-            bio: req.notes
+            bio: req.notes,
+            adminNotes: adminNotes
           });
         } else if (req.type === 'hours' && canApproveHours()) {
           const member = members.find(m => m.id === req.memberId || (m.email || '').toLowerCase() === (req.email || '').toLowerCase());
@@ -1815,8 +1925,11 @@
           }
         }
       }
+
       req.status = decision;
+      req.adminNotes = adminNotes;
       req.reviewedBy = currentUser ? currentUser.email : '';
+      closeReviewModal();
       saveData();
     }
 
@@ -2028,7 +2141,6 @@
       }).join('');
     }
 
-    // الهيكل التنظيمي: يعرض فقط المتطوعين والأعضاء الذين أُسندت لهم مهام تنظيمية (roles.length > 0)
     function renderOrgChart() {
       const editable = canEditData();
       const assignedMembers = members.filter(m => m.roles && m.roles.length > 0);
@@ -2213,7 +2325,6 @@
       const container = document.getElementById('roles-inputs-container');
       container.innerHTML = '';
 
-      // تعبئة قائمة المتطوعين المقبولين والفعالين حالياً
       const existingSel = document.getElementById('m-existing-select');
       existingSel.innerHTML = `<option value="">-- اختر متطوعاً من القائمة المقبولة والفعالة (أو أدخل يدوياً) --</option>` +
         members.map(m => `<option value="${m.id}">${m.name} — (${m.gov})</option>`).join('');
@@ -2367,7 +2478,8 @@
         'الأيام المفضلة': (r.prefDays || []).join('، '),
         'الأوقات المفضلة': (r.prefTimes || []).join('، '),
         'التفاصيل والخبرات': r.notes || '',
-        'حالة الطلب': r.status === 'approved' ? 'مقبول' : (r.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة')
+        'حالة الطلب': r.status === 'approved' ? 'مقبول' : (r.status === 'rejected' ? 'مرفوض' : 'قيد المراجعة'),
+        'ملاحظات المدير': r.adminNotes || ''
       })));
       XLSX.utils.book_append_sheet(wb, ws3, 'طلبات_التطوع');
 
