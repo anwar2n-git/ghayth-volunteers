@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <!-- مكتبة تسجيل الدخول الرسمية من Google -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     tailwind.config = {
       theme: {
@@ -52,7 +54,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 17.657l-.707.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
-          <label for="logo-upload" class="cursor-pointer mt-1 block text-[11px] text-center text-teal-100 hover:text-amber-300 underline">
+          <!-- زر تغيير الشعار يظهر للمصرح لهم فقط -->
+          <label for="logo-upload" class="edit-only hidden cursor-pointer mt-1 block text-[11px] text-center text-teal-100 hover:text-amber-300 underline">
             تغيير الشعار
           </label>
           <input type="file" id="logo-upload" accept="image/*" class="hidden" onchange="handleLogoUpload(event)" />
@@ -70,16 +73,33 @@
         </div>
       </div>
 
-      <!-- أزرار التصدير والمزامنة -->
+      <!-- أزرار التصدير وتسجيل الدخول -->
       <div class="flex flex-wrap items-center gap-2">
+        <!-- منطقة تسجيل الدخول عبر Google -->
+        <div id="auth-guest-box" class="flex items-center">
+          <div id="google-signin-btn"></div>
+        </div>
+
+        <!-- بطاقة المستخدم المسجل -->
+        <div id="auth-user-box" class="hidden items-center gap-2 bg-white/15 border border-white/30 px-3 py-1.5 rounded-xl">
+          <img id="user-avatar" src="" alt="" class="w-7 h-7 rounded-full border border-white/50 hidden" />
+          <div class="text-right leading-tight">
+            <p id="user-display-name" class="text-xs font-extrabold text-white"></p>
+            <p id="user-role-badge" class="text-[10px] font-bold text-amber-300"></p>
+          </div>
+          <button onclick="logoutUser()" title="تسجيل الخروج" class="mr-1 text-xs bg-rose-600/80 hover:bg-rose-600 text-white px-2 py-1 rounded-lg font-bold transition">
+            خروج
+          </button>
+        </div>
+
         <button onclick="syncFromCloud(true)" class="bg-sky-600 hover:bg-sky-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
-          <span>🔄</span> تحديث المزامنة
+          <span>🔄</span> تحديث
         </button>
         <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
-          <span>📊</span> تصدير Excel
+          <span>📊</span> Excel
         </button>
         <button onclick="printReport('all')" class="bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition">
-          <span>🖨️</span> طباعة / PDF
+          <span>🖨️</span> طباعة
         </button>
       </div>
     </div>
@@ -99,9 +119,18 @@
         <button onclick="switchTab('initiatives')" id="tab-initiatives" class="nav-btn px-4 py-2 rounded-lg text-teal-100 hover:bg-white/10 transition whitespace-nowrap">
           🚀 إدارة المبادرات وساعات التطوع
         </button>
+        <!-- تبويب إدارة الصلاحيات (يظهر لمديري النظام فقط) -->
+        <button onclick="switchTab('permissions')" id="tab-permissions" class="admin-only hidden nav-btn px-4 py-2 rounded-lg text-amber-300 hover:bg-white/10 transition whitespace-nowrap">
+          🔐 إدارة الصلاحيات والمستخدمين
+        </button>
       </div>
     </nav>
   </header>
+
+  <!-- شريط تنبيه وضع القراءة فقط للزوار -->
+  <div id="readonly-banner" class="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs py-2 px-4 text-center no-print">
+    👁️ أنت تتصفح المنصة حالياً بوضع <strong>الاطلاع (القراءة فقط)</strong>. لتعديل البيانات أو إضافة متطوعين ومبادرات، يرجى تسجيل الدخول بحساب Google المصرّح له من الأعلى.
+  </div>
 
   <!-- المحتوى الرئيسي -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
@@ -166,7 +195,7 @@
             </ul>
           </div>
           <div class="mt-5 p-3.5 rounded-xl bg-teal-50 border border-teal-100 text-xs text-teal-900 leading-relaxed">
-            <strong>المزامنة السحابية مفعّلة:</strong> أي تعديل أو إضافة تُحفظ تلقائياً في سحابة الجمعية وتظهر على الجوال والكمبيوتر فوراً.
+            <strong>نظام الحوكمة والصلاحيات:</strong> البيانات محمية سحابياً؛ التعديل متاح فقط لحسابات Google المعتمدة من إدارة الجمعية.
           </div>
         </div>
       </div>
@@ -179,7 +208,7 @@
           <h2 class="text-xl font-extrabold text-ghayth-dark">سجل الكادر الإداري والتنفيذي والمتطوعين</h2>
           <p class="text-xs text-slate-500 mt-0.5">إدارة البيانات، الخبرات، المناصب المتعددة، وإصدار شهادات التطوع</p>
         </div>
-        <button onclick="openMemberModal()" class="bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow flex items-center gap-2 transition">
+        <button onclick="openMemberModal()" class="edit-only hidden bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow flex items-center gap-2 transition">
           <span>➕</span> إضافة عضو / متطوع جديد
         </button>
       </div>
@@ -229,7 +258,7 @@
                 <th class="p-3">المسمى الرئيسي</th>
                 <th class="p-3">المناصب واللجان الإضافية (تعدد الأدوار)</th>
                 <th class="p-3">المحافظة</th>
-                <th class="p-3 rounded-tl-xl">إجراء</th>
+                <th class="p-3 rounded-tl-xl edit-only hidden">إجراء</th>
               </tr>
             </thead>
             <tbody id="roles-matrix-body" class="divide-y divide-slate-100"></tbody>
@@ -245,12 +274,64 @@
           <h2 class="text-xl font-extrabold text-ghayth-dark">المبادرات والمشاريع التطوعية</h2>
           <p class="text-xs text-slate-500 mt-0.5">متابعة فرق العمل الميدانية، الشركاء، وساعات التطوع المنجزة</p>
         </div>
-        <button onclick="openInitiativeModal()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow flex items-center gap-2 transition">
+        <button onclick="openInitiativeModal()" class="edit-only hidden bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow flex items-center gap-2 transition">
           <span>➕</span> إضافة مبادرة جديدة
         </button>
       </div>
 
       <div id="initiatives-grid" class="grid md:grid-cols-2 gap-5"></div>
+    </section>
+
+    <!-- 5. إدارة الصلاحيات والمستخدمين (خاص بالمديرين Admin) -->
+    <section id="view-permissions" class="hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b pb-4 mb-5">
+          <div>
+            <h2 class="text-xl font-extrabold text-ghayth-dark flex items-center gap-2">
+              <span>🔐</span> لوحة التحكم بصلاحيات المستخدمين (Google Accounts)
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">حدد حسابات Gmail المصرّح لها بالدخول والتعديل على بيانات المنصة ومستوى صلاحية كل مستخدم.</p>
+          </div>
+        </div>
+
+        <!-- نموذج إضافة مستخدم مصرح له -->
+        <form onsubmit="addPermissionUser(event)" class="bg-slate-50 p-4 rounded-xl border border-slate-200 grid sm:grid-cols-4 gap-3 items-end mb-6 text-sm">
+          <div>
+            <label class="block font-bold text-xs mb-1">البريد الإلكتروني (Gmail) *</label>
+            <input type="email" id="perm-email" required placeholder="example@gmail.com" dir="ltr" class="w-full border bg-white rounded-xl px-3 py-2 text-left" />
+          </div>
+          <div>
+            <label class="block font-bold text-xs mb-1">الاسم / الصفة التنظيمية *</label>
+            <input type="text" id="perm-name" required placeholder="مثال: أ. فاطمة الآمنة" class="w-full border bg-white rounded-xl px-3 py-2" />
+          </div>
+          <div>
+            <label class="block font-bold text-xs mb-1">مستوى الصلاحية *</label>
+            <select id="perm-role" class="w-full border bg-white rounded-xl px-3 py-2">
+              <option value="editor">محرر (إضافة وتعديل البيانات)</option>
+              <option value="admin">مدير نظام (تعديل + إدارة الصلاحيات)</option>
+            </select>
+          </div>
+          <button type="submit" class="bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold py-2 px-4 rounded-xl shadow transition">
+            ➕ منح الصلاحية وحفظ
+          </button>
+        </form>
+
+        <!-- جدول المستخدمين المصرح لهم -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm text-right border-collapse">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 border-b">
+                <th class="p-3 rounded-tr-xl">الاسم / الصفة</th>
+                <th class="p-3">البريد الإلكتروني (Google)</th>
+                <th class="p-3">مستوى الصلاحية</th>
+                <th class="p-3">تاريخ الإضافة</th>
+                <th class="p-3 rounded-tl-xl">إدارة</th>
+              </tr>
+            </thead>
+            <tbody id="permissions-table-body" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -370,8 +451,14 @@
   </div>
 
   <script>
-    // رابط Google Apps Script Web App للمزامنة السحابية:
+    // 1. ضع هنا Google Client ID الخاص بك من Google Cloud Console:
+    const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+
+    // 2. رابط Google Apps Script Web App للمزامنة السحابية:
     const CLOUD_API_URL = "https://script.google.com/macros/s/AKfycbzgCsmd3ofQO2yMq_gIdEkHYgCcfu1trP5SJfUyagzEuYHt95Tyl1w3VvXuptQ5ko-o/exec";
+
+    // المشرفون الأساسيون الافتراضيون
+    const SUPER_ADMINS = ["anwar2n@gmail.com", "ghaythforhumanity@gmail.com"];
 
     const DEFAULT_MEMBERS = [
       {
@@ -422,6 +509,133 @@
 
     let members = JSON.parse(localStorage.getItem('ghayth_members_v1')) || DEFAULT_MEMBERS;
     let initiatives = JSON.parse(localStorage.getItem('ghayth_initiatives_v1')) || DEFAULT_INITIATIVES;
+    let permissions = JSON.parse(localStorage.getItem('ghayth_perms_v1')) || SUPER_ADMINS.map(e => ({ email: e, name: 'مدير النظام الرئيسي', role: 'admin', addedAt: 'أساسي' }));
+
+    // بيانات جلسة المستخدم الحالي
+    let currentUser = JSON.parse(sessionStorage.getItem('ghayth_auth_user')) || null;
+
+    // فك تشفير JWT من Google محلياً لعرض الاسم والصورة
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // استجابة تسجيل الدخول من Google
+    function handleGoogleCredentialResponse(response) {
+      const payload = parseJwt(response.credential);
+      if (!payload || !payload.email) {
+        alert("تعذر قراءة بيانات حساب Google.");
+        return;
+      }
+      const email = payload.email.toLowerCase().trim();
+      const isSuper = SUPER_ADMINS.includes(email);
+      const permEntry = permissions.find(p => p.email.toLowerCase().trim() === email);
+
+      if (!isSuper && !permEntry) {
+        alert(`عذراً (${email})، هذا الحساب غير مدرج في قائمة المستخدمين المصرّح لهم بالتعديل. يرجى التواصل مع إدارة الجمعية لمنحك الصلاحية.`);
+        return;
+      }
+
+      currentUser = {
+        email: email,
+        name: payload.name || email,
+        picture: payload.picture || '',
+        role: isSuper ? 'admin' : permEntry.role,
+        idToken: response.credential
+      };
+      sessionStorage.setItem('ghayth_auth_user', JSON.stringify(currentUser));
+      applyAuthUI();
+      updateAllViews();
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      sessionStorage.removeItem('ghayth_auth_user');
+      if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.disableAutoSelect();
+      }
+      switchTab('dashboard');
+      applyAuthUI();
+      updateAllViews();
+    }
+
+    function canEdit() {
+      return currentUser && (currentUser.role === 'admin' || currentUser.role === 'editor');
+    }
+
+    function isAdmin() {
+      return currentUser && currentUser.role === 'admin';
+    }
+
+    // تحديث عناصر الواجهة بناءً على صلاحيات المستخدم الحالي
+    function applyAuthUI() {
+      const guestBox = document.getElementById('auth-guest-box');
+      const userBox = document.getElementById('auth-user-box');
+      const banner = document.getElementById('readonly-banner');
+
+      if (currentUser) {
+        // إعادة التحقق من الصلاحية في حال تم تعديلها سحابياً
+        const isSuper = SUPER_ADMINS.includes(currentUser.email);
+        const permEntry = permissions.find(p => p.email.toLowerCase().trim() === currentUser.email);
+        if (!isSuper && !permEntry) {
+          logoutUser();
+          return;
+        }
+        currentUser.role = isSuper ? 'admin' : permEntry.role;
+
+        guestBox.classList.add('hidden');
+        userBox.classList.remove('hidden');
+        userBox.classList.add('flex');
+        banner.classList.add('hidden');
+
+        document.getElementById('user-display-name').textContent = currentUser.name;
+        document.getElementById('user-role-badge').textContent = currentUser.role === 'admin' ? '👑 مدير نظام (صلاحية كاملة)' : '✏️ محرر معتمد';
+        const avatar = document.getElementById('user-avatar');
+        if (currentUser.picture) {
+          avatar.src = currentUser.picture;
+          avatar.classList.remove('hidden');
+        }
+      } else {
+        guestBox.classList.remove('hidden');
+        userBox.classList.add('hidden');
+        userBox.classList.remove('flex');
+        banner.classList.remove('hidden');
+      }
+
+      // إظهار أو إخفاء أزرار التعديل
+      document.querySelectorAll('.edit-only').forEach(el => {
+        if (canEdit()) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      });
+
+      // إظهار أو إخفاء تبويب إدارة الصلاحيات
+      document.querySelectorAll('.admin-only').forEach(el => {
+        if (isAdmin()) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      });
+    }
+
+    // تهيئة زر تسجيل الدخول من Google
+    function initGoogleAuth() {
+      if (window.google && google.accounts && google.accounts.id) {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleCredentialResponse
+        });
+        google.accounts.id.renderButton(
+          document.getElementById("google-signin-btn"),
+          { theme: "outline", size: "medium", text: "signin_with", shape: "pill", locale: "ar" }
+        );
+      } else {
+        setTimeout(initGoogleAuth, 300);
+      }
+    }
 
     function setSyncStatus(text, colorClass) {
       const badge = document.getElementById('sync-badge');
@@ -434,27 +648,34 @@
       try {
         const res = await fetch(CLOUD_API_URL);
         const cloudData = await res.json();
-        if (cloudData.empty) {
-          await pushToCloud();
-        } else if (cloudData.members && cloudData.initiatives) {
+        if (cloudData.members && cloudData.initiatives) {
           members = cloudData.members;
           initiatives = cloudData.initiatives;
           localStorage.setItem('ghayth_members_v1', JSON.stringify(members));
           localStorage.setItem('ghayth_initiatives_v1', JSON.stringify(initiatives));
-          if (cloudData.logo) {
-            localStorage.setItem('ghayth_logo_v1', cloudData.logo);
-            applySavedLogo();
-          }
-          updateAllViews();
         }
+        if (cloudData.permissions && Array.isArray(cloudData.permissions)) {
+          permissions = cloudData.permissions;
+          localStorage.setItem('ghayth_perms_v1', JSON.stringify(permissions));
+        }
+        if (cloudData.logo) {
+          localStorage.setItem('ghayth_logo_v1', cloudData.logo);
+          applySavedLogo();
+        }
+        applyAuthUI();
+        updateAllViews();
         setSyncStatus("✅ متزامن سحابياً", "bg-emerald-500 text-white");
-        if (manual) alert("تم تحديث البيانات ومزامنتها من السحابة بنجاح!");
+        if (manual) alert("تم تحديث البيانات والصلاحيات من السحابة بنجاح!");
       } catch (err) {
         setSyncStatus("⚠️ تعذر الاتصال بالسحابة", "bg-rose-600 text-white");
       }
     }
 
     async function pushToCloud() {
+      if (!canEdit()) {
+        alert("يرجى تسجيل الدخول بحساب مصرّح له لحفظ التعديلات.");
+        return;
+      }
       setSyncStatus("⏳ جاري الحفظ في السحابة...", "bg-amber-500 text-slate-950");
       try {
         await fetch(CLOUD_API_URL, {
@@ -462,8 +683,10 @@
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
+            idToken: currentUser.idToken,
             members,
             initiatives,
+            permissions,
             logo: localStorage.getItem('ghayth_logo_v1') || ''
           })
         });
@@ -474,13 +697,83 @@
     }
 
     function saveData() {
+      if (!canEdit()) return;
       localStorage.setItem('ghayth_members_v1', JSON.stringify(members));
       localStorage.setItem('ghayth_initiatives_v1', JSON.stringify(initiatives));
+      localStorage.setItem('ghayth_perms_v1', JSON.stringify(permissions));
       updateAllViews();
       pushToCloud();
     }
 
+    // إدارة الصلاحيات (Admin فقط)
+    function renderPermissions() {
+      const tbody = document.getElementById('permissions-table-body');
+      if (!tbody) return;
+      tbody.innerHTML = permissions.map(p => {
+        const isSuper = SUPER_ADMINS.includes(p.email.toLowerCase());
+        const roleBadge = p.role === 'admin'
+          ? '<span class="bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold px-2.5 py-0.5 rounded-full">👑 مدير نظام (Admin)</span>'
+          : '<span class="bg-teal-100 text-teal-800 border border-teal-300 text-xs font-bold px-2.5 py-0.5 rounded-full">✏️ محرر بيانات (Editor)</span>';
+
+        const actionHtml = isSuper
+          ? '<span class="text-xs text-slate-400 font-bold">حساب أساسي محمي</span>'
+          : `<div class="flex gap-2">
+               <button onclick="togglePermissionRole('${p.email}')" class="text-xs bg-slate-100 hover:bg-ghayth-teal hover:text-white font-bold px-2.5 py-1 rounded-lg transition">تبديل الدور</button>
+               <button onclick="removePermissionUser('${p.email}')" class="text-xs bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 font-bold px-2.5 py-1 rounded-lg transition">إلغاء الصلاحية</button>
+             </div>`;
+
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="p-3 font-bold text-slate-900">${p.name || '-'}</td>
+            <td class="p-3 font-mono text-xs text-left" dir="ltr">${p.email}</td>
+            <td class="p-3">${roleBadge}</td>
+            <td class="p-3 text-xs text-slate-500">${p.addedAt || '-'}</td>
+            <td class="p-3">${actionHtml}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function addPermissionUser(e) {
+      e.preventDefault();
+      if (!isAdmin()) return;
+      const email = document.getElementById('perm-email').value.toLowerCase().trim();
+      const name = document.getElementById('perm-name').value.trim();
+      const role = document.getElementById('perm-role').value;
+
+      if (permissions.some(p => p.email.toLowerCase() === email)) {
+        alert("هذا البريد الإلكتروني موجود بالفعل في قائمة الصلاحيات.");
+        return;
+      }
+      permissions.push({
+        email,
+        name,
+        role,
+        addedAt: new Date().toISOString().split('T')[0]
+      });
+      e.target.reset();
+      saveData();
+    }
+
+    function togglePermissionRole(email) {
+      if (!isAdmin() || SUPER_ADMINS.includes(email.toLowerCase())) return;
+      const item = permissions.find(p => p.email.toLowerCase() === email.toLowerCase());
+      if (item) {
+        item.role = item.role === 'admin' ? 'editor' : 'admin';
+        saveData();
+      }
+    }
+
+    function removePermissionUser(email) {
+      if (!isAdmin() || SUPER_ADMINS.includes(email.toLowerCase())) return;
+      if (confirm(`هل تريد إلغاء صلاحية التعديل عن الحساب: ${email}؟`)) {
+        permissions = permissions.filter(p => p.email.toLowerCase() !== email.toLowerCase());
+        saveData();
+      }
+    }
+
     function handleLogoUpload(e) {
+      if (!canEdit()) return;
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -504,11 +797,15 @@
     }
 
     function switchTab(tabName) {
-      ['dashboard', 'volunteers', 'orgchart', 'initiatives'].forEach(t => {
-        document.getElementById('view-' + t).classList.add('hidden');
+      if (tabName === 'permissions' && !isAdmin()) return;
+      ['dashboard', 'volunteers', 'orgchart', 'initiatives', 'permissions'].forEach(t => {
+        const view = document.getElementById('view-' + t);
         const btn = document.getElementById('tab-' + t);
-        btn.classList.remove('bg-white', 'text-ghayth-dark', 'shadow');
-        btn.classList.add('text-teal-100');
+        if (view) view.classList.add('hidden');
+        if (btn) {
+          btn.classList.remove('bg-white', 'text-ghayth-dark', 'shadow');
+          if (t !== 'permissions') btn.classList.add('text-teal-100');
+        }
       });
       document.getElementById('view-' + tabName).classList.remove('hidden');
       const activeBtn = document.getElementById('tab-' + tabName);
@@ -554,6 +851,7 @@
       const q = (document.getElementById('search-member').value || '').toLowerCase();
       const gov = document.getElementById('filter-gov').value;
       const level = document.getElementById('filter-level').value;
+      const editable = canEdit();
 
       const filtered = members.filter(m => {
         const rolesText = (m.roles || []).map(r => r.title).join(' ').toLowerCase();
@@ -580,6 +878,12 @@
           `<span class="text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md"># ${i}</span>`
         ).join('');
 
+        const editButtons = editable ? `
+          <div class="flex gap-1">
+            <button onclick="openMemberModal('${m.id}')" class="text-ghayth-teal hover:bg-teal-50 font-bold px-2.5 py-1.5 rounded-lg">تعديل</button>
+            <button onclick="deleteMember('${m.id}')" class="text-rose-600 hover:bg-rose-50 font-bold px-2.5 py-1.5 rounded-lg">حذف</button>
+          </div>` : '';
+
         return `
           <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between hover:shadow-md transition">
             <div>
@@ -600,10 +904,7 @@
 
             <div class="mt-4 pt-3 border-t flex items-center justify-between gap-2 text-xs">
               <button onclick="printCertificate('${m.id}')" class="text-amber-700 hover:bg-amber-50 font-bold px-2.5 py-1.5 rounded-lg border border-amber-200 transition">🏅 شهادة تطوع</button>
-              <div class="flex gap-1">
-                <button onclick="openMemberModal('${m.id}')" class="text-ghayth-teal hover:bg-teal-50 font-bold px-2.5 py-1.5 rounded-lg">تعديل</button>
-                <button onclick="deleteMember('${m.id}')" class="text-rose-600 hover:bg-rose-50 font-bold px-2.5 py-1.5 rounded-lg">حذف</button>
-              </div>
+              ${editButtons}
             </div>
           </div>
         `;
@@ -611,6 +912,7 @@
     }
 
     function renderOrgChart() {
+      const editable = canEdit();
       const boardMembers = members.filter(m => m.roles.some(r => r.level === 'board'));
       const execMembers = members.filter(m => m.roles.some(r => r.level === 'executive'));
       const commMembers = members.filter(m => m.roles.some(r => r.level === 'committee'));
@@ -650,19 +952,21 @@
       matrixBody.innerHTML = members.map(m => {
         const primary = m.roles[0] ? m.roles[0].title : '-';
         const secondary = m.roles.slice(1).map(r => `<span class="inline-block bg-amber-50 border border-amber-200 text-amber-900 text-xs font-bold px-2 py-0.5 rounded-md ml-1 mb-1">${r.title}</span>`).join('') || '<span class="text-xs text-slate-400">منصب واحد</span>';
+        const actionCell = editable ? `<td class="p-3"><button onclick="openMemberModal('${m.id}')" class="text-xs bg-slate-100 hover:bg-ghayth-teal hover:text-white font-bold px-2.5 py-1 rounded-lg transition">إدارة المناصب</button></td>` : '';
         return `
           <tr class="hover:bg-slate-50">
             <td class="p-3 font-bold text-slate-900">${m.name}</td>
             <td class="p-3 text-ghayth-teal font-bold">${primary}</td>
             <td class="p-3">${secondary}</td>
             <td class="p-3 text-xs">${m.gov}</td>
-            <td class="p-3"><button onclick="openMemberModal('${m.id}')" class="text-xs bg-slate-100 hover:bg-ghayth-teal hover:text-white font-bold px-2.5 py-1 rounded-lg transition">إدارة المناصب</button></td>
+            ${actionCell}
           </tr>
         `;
       }).join('');
     }
 
     function renderInitiatives() {
+      const editable = canEdit();
       const grid = document.getElementById('initiatives-grid');
       grid.innerHTML = initiatives.map(init => `
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
@@ -682,215 +986,4 @@
               <span>👥 ${init.volunteers} متطوع</span>
               <span>⏱️ ${init.hours} ساعة</span>
             </div>
-            <button onclick="deleteInitiative('${init.id}')" class="text-rose-600 hover:underline font-bold">حذف</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function addRoleRow(title = '', level = 'committee') {
-      const container = document.getElementById('roles-inputs-container');
-      const div = document.createElement('div');
-      div.className = 'flex items-center gap-2 role-row';
-      div.innerHTML = `
-        <input type="text" class="role-title flex-1 border bg-white rounded-lg px-3 py-1.5 text-xs" placeholder="المسمى الوظيفي أو اللجنة..." value="${title}" required />
-        <select class="role-level border bg-white rounded-lg px-2 py-1.5 text-xs">
-          <option value="board" ${level === 'board' ? 'selected' : ''}>مجلس الإدارة</option>
-          <option value="executive" ${level === 'executive' ? 'selected' : ''}>الإدارة التنفيذية</option>
-          <option value="committee" ${level === 'committee' ? 'selected' : ''}>لجنة / مبادرة</option>
-          <option value="volunteer" ${level === 'volunteer' ? 'selected' : ''}>متطوع ميداني</option>
-        </select>
-        <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 font-bold px-2 hover:bg-rose-50 rounded">✕</button>
-      `;
-      container.appendChild(div);
-    }
-
-    function openMemberModal(id = null) {
-      const modal = document.getElementById('member-modal');
-      const container = document.getElementById('roles-inputs-container');
-      container.innerHTML = '';
-
-      if (id) {
-        const m = members.find(x => x.id === id);
-        document.getElementById('member-modal-title').textContent = 'تعديل بيانات ومناصب: ' + m.name;
-        document.getElementById('m-id').value = m.id;
-        document.getElementById('m-name').value = m.name;
-        document.getElementById('m-gov').value = m.gov;
-        document.getElementById('m-phone').value = m.phone || '';
-        document.getElementById('m-hours').value = m.hours || 0;
-        document.getElementById('m-initiatives').value = (m.initiatives || []).join('، ');
-        document.getElementById('m-bio').value = m.bio || '';
-        (m.roles || []).forEach(r => addRoleRow(r.title, r.level));
-      } else {
-        document.getElementById('member-modal-title').textContent = 'إضافة عضو / متطوع جديد';
-        document.getElementById('member-form').reset();
-        document.getElementById('m-id').value = '';
-        addRoleRow('متطوع ميداني', 'volunteer');
-      }
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
-    }
-
-    function closeMemberModal() {
-      const modal = document.getElementById('member-modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-    }
-
-    function saveMember(e) {
-      e.preventDefault();
-      const id = document.getElementById('m-id').value;
-      const roleRows = document.querySelectorAll('#roles-inputs-container .role-row');
-      const roles = Array.from(roleRows).map(row => ({
-        title: row.querySelector('.role-title').value.trim(),
-        level: row.querySelector('.role-level').value
-      })).filter(r => r.title);
-
-      if (roles.length === 0) { alert('يرجى إضافة منصب واحد على الأقل.'); return; }
-
-      const initiativesArr = document.getElementById('m-initiatives').value.split(/[,،]/).map(s => s.trim()).filter(Boolean);
-      const memberObj = {
-        id: id || 'm_' + Date.now(),
-        name: document.getElementById('m-name').value.trim(),
-        gov: document.getElementById('m-gov').value,
-        phone: document.getElementById('m-phone').value.trim(),
-        hours: Number(document.getElementById('m-hours').value || 0),
-        roles,
-        initiatives: initiativesArr,
-        bio: document.getElementById('m-bio').value.trim()
-      };
-
-      if (id) {
-        const idx = members.findIndex(x => x.id === id);
-        members[idx] = memberObj;
-      } else {
-        members.unshift(memberObj);
-      }
-      saveData();
-      closeMemberModal();
-    }
-
-    function deleteMember(id) {
-      if (confirm('هل أنت متأكد من حذف هذا السجل؟')) {
-        members = members.filter(m => m.id !== id);
-        saveData();
-      }
-    }
-
-    function openInitiativeModal() {
-      document.getElementById('initiative-modal').classList.remove('hidden');
-      document.getElementById('initiative-modal').classList.add('flex');
-    }
-
-    function closeInitiativeModal() {
-      document.getElementById('initiative-modal').classList.add('hidden');
-      document.getElementById('initiative-modal').classList.remove('flex');
-    }
-
-    function saveInitiative(e) {
-      e.preventDefault();
-      initiatives.unshift({
-        id: 'i_' + Date.now(),
-        title: document.getElementById('i-title').value.trim(),
-        lead: document.getElementById('i-lead').value.trim(),
-        location: document.getElementById('i-location').value.trim(),
-        volunteers: Number(document.getElementById('i-volunteers').value || 0),
-        hours: Number(document.getElementById('i-hours').value || 0),
-        partners: document.getElementById('i-partners').value.trim(),
-        desc: document.getElementById('i-desc').value.trim()
-      });
-      saveData();
-      closeInitiativeModal();
-      e.target.reset();
-    }
-
-    function deleteInitiative(id) {
-      if (confirm('حذف هذه المبادرة؟')) {
-        initiatives = initiatives.filter(i => i.id !== id);
-        saveData();
-      }
-    }
-
-    function exportToExcel() {
-      const wb = XLSX.utils.book_new();
-      const ws1 = XLSX.utils.json_to_sheet(members.map(m => ({
-        'الاسم الكامل': m.name, 'المحافظة': m.gov, 'المنصب الرئيسي': m.roles[0] ? m.roles[0].title : '',
-        'كافة المناصب واللجان': m.roles.map(r => r.title).join(' | '), 'عدد المناصب': m.roles.length,
-        'ساعات التطوع': m.hours, 'المبادرات': (m.initiatives || []).join('، '), 'الهاتف': m.phone || '', 'النبذة': m.bio || ''
-      })));
-      XLSX.utils.book_append_sheet(wb, ws1, 'الكادر والمتطوعون');
-
-      const ws2 = XLSX.utils.json_to_sheet(initiatives.map(i => ({
-        'اسم المبادرة': i.title, 'المنسق المسؤول': i.lead, 'الموقع': i.location,
-        'عدد المتطوعين': i.volunteers, 'الساعات المنجزة': i.hours, 'الشركاء': i.partners, 'الوصف': i.desc
-      })));
-      XLSX.utils.book_append_sheet(wb, ws2, 'المبادرات والمشاريع');
-      XLSX.writeFile(wb, 'منصة_التطوع_جمعية_غيث_لأجل_الإنسانية.xlsx');
-    }
-
-    function printCertificate(memberId) {
-      const m = members.find(x => x.id === memberId);
-      const savedLogo = localStorage.getItem('ghayth_logo_v1');
-      const logoTag = savedLogo ? `<img src="${savedLogo}" style="height:80px; margin:0 auto 10px;" />` : '';
-      const printArea = document.getElementById('print-area');
-      printArea.classList.remove('hidden');
-      printArea.innerHTML = `
-        <div style="border: 8px double #0F766E; padding: 40px; text-align: center; font-family: 'Cairo', sans-serif; direction: rtl;">
-          ${logoTag}
-          <h1 style="color: #0B4F4A; font-size: 26px; margin: 0;">جمعية غيث لأجل الإنسانية</h1>
-          <p style="color: #64748B; font-size: 13px; margin: 4px 0 25px;">مرخصة بالقرار رقم 2993 تاريخ 03/08/2025 — وزارة الشؤون الاجتماعية والعمل</p>
-          <h2 style="background: #FEF3C7; color: #92400E; display: inline-block; padding: 8px 30px; border-radius: 30px; font-size: 22px;">شهادة شكر وتقدير تطوعية</h2>
-          <p style="font-size: 16px; margin-top: 25px;">تتقدم إدارة <strong>جمعية غيث لأجل الإنسانية</strong> بجزيل الشكر والتقدير إلى:</p>
-          <h3 style="font-size: 28px; color: #0F766E; margin: 12px 0;">${m.name}</h3>
-          <p style="font-size: 15px; max-width: 600px; margin: 0 auto; line-height: 1.8;">
-            وذلك تقديراً لجهوده/ها المتميزة وعطائه/ها الإنساني بصفة: <strong>${m.roles.map(r => r.title).join('، ')}</strong>،
-            وإتمام <strong>(${m.hours} ساعة تطوعية)</strong> ضمن مبادرات الجمعية في محافظة <strong>${m.gov}</strong>.
-          </p>
-          <div style="display: flex; justify-content: space-around; margin-top: 50px; font-size: 14px;">
-            <div><strong>رئيس مجلس الإدارة</strong><br/>أ. فاطمة الآمنة</div>
-            <div><strong>المدير العام للجمعية</strong><br/>أ. محمد أنور علي العلي</div>
-          </div>
-        </div>
-      `;
-      window.print();
-      printArea.classList.add('hidden');
-    }
-
-    function printReport() {
-      const printArea = document.getElementById('print-area');
-      printArea.classList.remove('hidden');
-      const rows = members.map(m => `
-        <tr>
-          <td style="border:1px solid #cbd5e1; padding:8px;"><strong>${m.name}</strong></td>
-          <td style="border:1px solid #cbd5e1; padding:8px;">${m.roles.map(r => r.title).join(' + ')}</td>
-          <td style="border:1px solid #cbd5e1; padding:8px;">${m.gov}</td>
-          <td style="border:1px solid #cbd5e1; padding:8px;">${m.hours} ساعة</td>
-        </tr>
-      `).join('');
-      printArea.innerHTML = `
-        <div style="font-family: 'Cairo', sans-serif; direction: rtl; padding: 20px;">
-          <h2 style="color:#0B4F4A; margin-bottom:4px;">جمعية غيث لأجل الإنسانية — التقرير التنظيمي وسجل التطوع</h2>
-          <p style="font-size:12px; color:#475569; margin-bottom:20px;">قرار الإشهار رقم 2993 تاريخ 03/08/2025 | نطاق العمل: إدلب، حلب، دمشق، حماة</p>
-          <table style="width:100%; border-collapse:collapse; font-size:13px; text-align:right;">
-            <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">الاسم الكامل</th><th style="border:1px solid #cbd5e1; padding:8px;">المناصب واللجان</th><th style="border:1px solid #cbd5e1; padding:8px;">المحافظة</th><th style="border:1px solid #cbd5e1; padding:8px;">ساعات التطوع</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
-      window.print();
-      printArea.classList.add('hidden');
-    }
-
-    function updateAllViews() {
-      updateDashboard();
-      renderMembers();
-      renderOrgChart();
-      renderInitiatives();
-    }
-
-    applySavedLogo();
-    updateAllViews();
-    syncFromCloud();
-  </script>
-</body>
-</html>
+            ${editable ? `<button onclick="
