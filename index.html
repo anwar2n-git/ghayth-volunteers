@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     tailwind.config = {
@@ -35,9 +36,10 @@
     .org-line-v { width: 2px; background-color: #CBD5E1; margin: 0 auto; }
     .org-branch-bar { border-top: 2px solid #CBD5E1; }
     @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       body * { visibility: hidden; }
       #print-area, #print-area * { visibility: visible; }
-      #print-area { position: absolute; right: 0; top: 0; width: 100%; background: white; padding: 20px; }
+      #print-area { position: absolute; right: 0; top: 0; width: 100%; background: white; padding: 15px; }
       .no-print { display: none !important; }
     }
   </style>
@@ -75,19 +77,19 @@
 
       <!-- أزرار التحكم والإشعارات وتسجيل الدخول -->
       <div class="flex flex-wrap items-center gap-2">
-        <!-- قائمة الإشعارات العلوية -->
-        <div id="notifications-wrapper" class="reviewer-only hidden relative">
-          <button onclick="toggleNotificationsMenu()" class="relative bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2.5 rounded-xl transition flex items-center gap-1.5" title="إشعارات المهام المطلوبة">
+        <!-- جرس الإشعارات (يظهر لجميع المسجلين: يعرض دعوات المبادرات للمتطوعين + المهام الإدارية للمشرفين) -->
+        <div id="notifications-wrapper" class="logged-in-only hidden relative">
+          <button onclick="toggleNotificationsMenu()" class="relative bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2.5 rounded-xl transition flex items-center gap-1.5" title="الإشعارات والدعوات">
             <span class="text-base">🔔</span>
             <span class="text-xs font-bold hidden sm:inline">الإشعارات</span>
             <span id="notif-bell-count" class="hidden bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">0</span>
           </button>
           <div id="notifications-dropdown" class="hidden absolute left-0 mt-2 w-80 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
             <div class="bg-slate-50 px-4 py-2.5 border-b flex justify-between items-center">
-              <span class="text-xs font-extrabold text-ghayth-dark">📋 المهام المطلوب تنفيذها</span>
+              <span class="text-xs font-extrabold text-ghayth-dark">🔔 الإشعارات والدعوات الواردة</span>
               <button onclick="toggleNotificationsMenu()" class="text-slate-400 hover:text-slate-700 text-xs font-bold">✕</button>
             </div>
-            <div id="notifications-list" class="max-h-72 overflow-y-auto divide-y divide-slate-100 text-xs"></div>
+            <div id="notifications-list" class="max-h-80 overflow-y-auto divide-y divide-slate-100 text-xs"></div>
           </div>
         </div>
 
@@ -118,9 +120,8 @@
         <button onclick="syncFromCloud(true)" class="edit-only hidden bg-sky-600 hover:bg-sky-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
           <span>🔄</span> تحديث
         </button>
-        <!-- فتح نفس ملف الإكسل الموحد على Google Sheets -->
         <a href="https://docs.google.com/spreadsheets/d/1c_AJlurGTb2FXFfnyjQzNj3gtuBd1brF2O5dLJGyS1c/edit?gid=1001#gid=1001" target="_blank" class="edit-only hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
-          <span>📊</span> ملف قاعدة البيانات (Excel)
+          <span>📊</span> ملف قاعدة البيانات
         </a>
         <button onclick="printReport('all')" class="edit-only hidden bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition">
           <span>🖨️</span> طباعة
@@ -128,11 +129,11 @@
       </div>
     </div>
 
-    <!-- الشريط العلوي المبسط (القائمة الرئيسية + زر القائمة الجانبية المنسدلة) -->
+    <!-- الشريط العلوي المبسط -->
     <nav class="bg-black/20 border-t border-white/10">
       <div class="max-w-7xl mx-auto px-4 flex items-center justify-between py-2 text-sm font-bold">
-        <div class="flex items-center gap-2">
-          <button onclick="toggleSidebarMenu()" class="bg-white/15 hover:bg-white/25 border border-white/30 text-white px-3.5 py-2 rounded-lg flex items-center gap-2 transition">
+        <div class="flex items-center gap-2 overflow-x-auto">
+          <button onclick="openSidebarMenu()" class="bg-white/15 hover:bg-white/25 border border-white/30 text-white px-3.5 py-2 rounded-lg flex items-center gap-2 transition shrink-0">
             <span class="text-base">☰</span>
             <span>القائمة والأقسام</span>
           </button>
@@ -145,45 +146,45 @@
         </div>
 
         <div class="text-xs text-teal-100 hidden md:block" id="current-section-indicator">
-          القسم الحالي: لوحة القيادة والتحليل
+          القسم الحالي: الرئيسية ولوحة القيادة
         </div>
       </div>
     </nav>
   </header>
 
-  <!-- القائمة الجانبية المنسدلة (Sidebar Drawer) -->
-  <div id="sidebar-backdrop" onclick="toggleSidebarMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden z-40 no-print"></div>
-  <aside id="sidebar-drawer" class="fixed top-0 right-0 h-full w-72 bg-white shadow-2xl border-l border-slate-200 transform translate-x-full transition-transform duration-300 z-50 flex flex-col justify-between no-print">
+  <!-- القائمة الجانبية المنسدلة (مخفية تماماً افتراضياً على الجوال والكمبيوتر ولا تفتح إلا بالنقر على زر القائمة) -->
+  <div id="sidebar-backdrop" onclick="closeSidebarMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden z-40 no-print"></div>
+  <aside id="sidebar-drawer" style="display: none;" class="fixed top-0 right-0 h-full w-72 max-w-[82vw] bg-white shadow-2xl border-l border-slate-200 transform translate-x-full transition-transform duration-300 z-50 flex-col justify-between no-print">
     <div>
       <div class="bg-ghayth-dark text-white p-4 flex items-center justify-between">
         <div>
-          <p class="font-extrabold text-sm">أقسام المنصة الإدارية</p>
+          <p class="font-extrabold text-sm">أقسام المنصة</p>
           <p class="text-[11px] text-teal-200">جمعية غيث لأجل الإنسانية</p>
         </div>
-        <button onclick="toggleSidebarMenu()" class="text-white/80 hover:text-white text-lg font-bold px-2">✕</button>
+        <button onclick="closeSidebarMenu()" class="text-white/80 hover:text-white text-lg font-bold px-2">✕</button>
       </div>
 
       <div class="p-3 space-y-1.5 text-sm font-bold">
-        <button onclick="switchTab('dashboard'); toggleSidebarMenu();" id="side-dashboard" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl bg-teal-50 text-ghayth-dark flex items-center gap-2.5 transition">
+        <button onclick="switchTab('dashboard'); closeSidebarMenu();" id="side-dashboard" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl bg-teal-50 text-ghayth-dark flex items-center gap-2.5 transition">
           <span>🏠</span> <span>لوحة القيادة والتحليل الذكي</span>
         </button>
-        <button onclick="switchTab('volunteers'); toggleSidebarMenu();" id="side-volunteers" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
-          <span>👥</span> <span>سجل الكادر والمتطوعين والخريطة</span>
+        <button onclick="switchTab('volunteers'); closeSidebarMenu();" id="side-volunteers" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+          <span>👥</span> <span>المتطوعين</span>
         </button>
-        <button onclick="switchTab('orgchart'); toggleSidebarMenu();" id="side-orgchart" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
-          <span>🏛️</span> <span>الهيكل التنظيمي ومصفوفة المهام</span>
+        <button onclick="switchTab('orgchart'); closeSidebarMenu();" id="side-orgchart" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+          <span>🏛️</span> <span>الهيكل التنظيمي</span>
         </button>
-        <button onclick="switchTab('initiatives'); toggleSidebarMenu();" id="side-initiatives" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
-          <span>🚀</span> <span>المبادرات وساعات التطوع</span>
+        <button onclick="switchTab('initiatives'); closeSidebarMenu();" id="side-initiatives" class="side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+          <span>🚀</span> <span>البرامج والمبادرات</span>
         </button>
-        <button onclick="switchTab('portal'); toggleSidebarMenu();" id="side-portal" class="logged-in-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-emerald-800 hover:bg-emerald-50 flex items-center gap-2.5 transition">
+        <button onclick="switchTab('portal'); closeSidebarMenu();" id="side-portal" class="logged-in-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-emerald-800 hover:bg-emerald-50 flex items-center gap-2.5 transition">
           <span>🙋‍♂️</span> <span>بوابة المتطوع وملفي الشخصي</span>
         </button>
-        <button onclick="switchTab('requests'); toggleSidebarMenu();" id="side-requests" class="reviewer-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-amber-800 hover:bg-amber-50 flex items-center justify-between transition">
+        <button onclick="switchTab('requests'); closeSidebarMenu();" id="side-requests" class="reviewer-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-amber-800 hover:bg-amber-50 flex items-center justify-between transition">
           <span class="flex items-center gap-2.5"><span>📥</span> <span>الطلبات والشهادات</span></span>
           <span id="pending-requests-badge" class="hidden bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full">0</span>
         </button>
-        <button onclick="switchTab('permissions'); toggleSidebarMenu();" id="side-permissions" class="admin-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-purple-800 hover:bg-purple-50 flex items-center gap-2.5 transition">
+        <button onclick="switchTab('permissions'); closeSidebarMenu();" id="side-permissions" class="admin-only hidden side-btn w-full text-right px-3.5 py-2.5 rounded-xl text-purple-800 hover:bg-purple-50 flex items-center gap-2.5 transition">
           <span>🔐</span> <span>إدارة الصلاحيات والمشرفين</span>
         </button>
       </div>
@@ -196,7 +197,7 @@
 
   <!-- شريط تنبيه للزوار -->
   <div id="readonly-banner" class="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs py-2 px-4 text-center no-print">
-    👋 أهلاً بك في منصة <strong>جمعية غيث لأجل الإنسانية</strong>. يمكنك التصفح بحرية، أو تسجيل الدخول بحساب <strong>Google</strong> لتقديم طلب تطوع أو تحديث ملفك وساعاتك التطوعية.
+    👋 أهلاً بك في منصة <strong>جمعية غيث لأجل الإنسانية</strong>. يمكنك التصفح بحرية، أو تسجيل الدخول بحساب <strong>Google</strong> لتقديم طلب تطوع أو الاستجابة لدعوات المبادرات.
   </div>
 
   <!-- المحتوى الرئيسي -->
@@ -205,7 +206,7 @@
     <section id="view-dashboard" class="space-y-6">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-r-ghayth-teal">
-          <p class="text-xs font-bold text-slate-500">إجمالي الكادر والمتطوعين</p>
+          <p class="text-xs font-bold text-slate-500">إجمالي المتطوعين والكادر</p>
           <p id="stat-total-members" class="text-3xl font-extrabold text-ghayth-dark mt-1">0</p>
           <p id="stat-govs-count" class="text-xs text-teal-600 mt-1">متطوعون معتمدون وفعالون</p>
         </div>
@@ -217,7 +218,7 @@
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-r-sky-600">
           <p class="text-xs font-bold text-slate-500">المبادرات والمشاريع النشطة</p>
           <p id="stat-total-initiatives" class="text-3xl font-extrabold text-sky-700 mt-1">0</p>
-          <p class="text-xs text-slate-500 mt-1">تنموية، تراثية، وحماية</p>
+          <p class="text-xs text-slate-500 mt-1">مرتبطة ببرامج الجمعية</p>
         </div>
         <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-r-4 border-r-emerald-600">
           <p class="text-xs font-bold text-slate-500">إجمالي الساعات التطوعية</p>
@@ -281,18 +282,18 @@
             </ul>
           </div>
           <div class="mt-5 p-3.5 rounded-xl bg-teal-50 border border-teal-100 text-xs text-teal-900 leading-relaxed">
-            <strong>قاعدة بيانات واحدة:</strong> كافة التحديثات والطلبات والشهادات تُحفظ مباشرة في ملف <em>قاعدة بيانات التطوع - جمعية غيث لأجل الإنسانية</em> على Google Sheets.
+            <strong>قاعدة بيانات موحدة:</strong> كافة التحديثات والطلبات والاستجابات تُحفظ مباشرة في ملف <em>قاعدة بيانات التطوع - جمعية غيث لأجل الإنسانية</em> على Google Sheets.
           </div>
         </div>
       </div>
     </section>
 
-    <!-- 2. سجل الكادر والمتطوعين + الخريطة التفاعلية -->
+    <!-- 2. المتطوعين + الخريطة التفاعلية -->
     <section id="view-volunteers" class="hidden space-y-5">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 class="text-xl font-extrabold text-ghayth-dark">سجل الكادر الإداري والتنفيذي والمتطوعين</h2>
-          <p class="text-xs text-slate-500 mt-0.5">يعرض كافة المتطوعين المقبولين والفعالين، خريطة انتشارهم، نسبة تفرغهم، ومهامهم</p>
+          <h2 class="text-xl font-extrabold text-ghayth-dark">المتطوعين</h2>
+          <p class="text-xs text-slate-500 mt-0.5">يعرض كافة المتطوعين المقبولين والفعالين، خريطة انتشارهم، والتواصل المباشر عبر واتساب</p>
         </div>
         <button onclick="openMemberModal()" class="edit-only hidden bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow flex items-center gap-2 transition">
           <span>➕</span> إضافة مهام وظيفية للمتطوع
@@ -303,7 +304,7 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div>
             <h3 class="text-base font-extrabold text-ghayth-dark flex items-center gap-2">
-              <span>🗺️</span> خريطة الانتشار الجغرافي التفاعلية للكادر والمتطوعين
+              <span>🗺️</span> خريطة الانتشار الجغرافي التفاعلية للمتطوعين
             </h3>
             <p class="text-xs text-slate-500">انقر على أي علامة لعرض اسم المتطوع، موقعه، مهامه التنظيمية، وساعاته التطوعية</p>
           </div>
@@ -318,7 +319,7 @@
           <option value="">📍 جميع المحافظات</option>
         </select>
         <select id="filter-level" onchange="renderMembers()" class="border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-ghayth-teal">
-          <option value="">🏛️ جميع المستويات التنظيمية (9 مستويات)</option>
+          <option value="">🏛️ جميع المستويات التنظيمية</option>
         </select>
       </div>
 
@@ -329,15 +330,18 @@
     <section id="view-orgchart" class="hidden space-y-6">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 class="text-xl font-extrabold text-ghayth-dark">الهيكل التنظيمي الهرمي ومصفوفة تعدد المهام</h2>
-          <p class="text-xs text-slate-500 mt-0.5">يظهر هنا الأعضاء والمتطوعون الذين أُسندت لهم مهام وظيفية وتنظيمية (مع إمكانية إسناد أكثر من مهمة لنفس الشخص)</p>
+          <h2 class="text-xl font-extrabold text-ghayth-dark">الهيكل التنظيمي الهرمي والتسلسل الإداري</h2>
+          <p class="text-xs text-slate-500 mt-0.5">مجلس الأمناء ← مجلس الإدارة ← المدير العام (ويتفرع عنه المستشارون ومدراء المكاتب) ← إدارة العمليات (أقسام) وإدارة البرامج (برامج ومشاريع)</p>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <button onclick="openMemberModal()" class="edit-only hidden bg-ghayth-teal hover:bg-ghayth-dark text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
             ➕ إضافة مهام وظيفية للمتطوع
           </button>
+          <button onclick="printOrgChartVisualPDF()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition">
+            🖼️ طباعة كرسم للهيكل (PDF)
+          </button>
           <button onclick="printReport('orgchart')" class="edit-only hidden bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">
-            🖨️ طباعة الهيكل التنظيمي
+            🖨️ طباعة كجدول
           </button>
         </div>
       </div>
@@ -364,15 +368,15 @@
       </div>
     </section>
 
-    <!-- 4. المبادرات -->
+    <!-- 4. البرامج والمبادرات والمشاريع -->
     <section id="view-initiatives" class="hidden space-y-6">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 class="text-xl font-extrabold text-ghayth-dark">المبادرات والمشاريع التطوعية</h2>
-          <p class="text-xs text-slate-500 mt-0.5">متابعة فرق العمل الميدانية، الشركاء، ودعوة المتطوعين عبر البريد الإلكتروني عند إطلاق أي مبادرة</p>
+          <h2 class="text-xl font-extrabold text-ghayth-dark">البرامج والمبادرات والمشاريع التطوعية</h2>
+          <p class="text-xs text-slate-500 mt-0.5">متابعة المبادرات، الدعوات المرسلة للمتطوعين، وإحصائيات الاستجابة والمشاركة</p>
         </div>
         <button onclick="openInitiativeModal()" class="edit-only hidden bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm px-4 py-2.5 rounded-xl shadow flex items-center gap-2 transition">
-          <span>➕</span> إضافة مبادرة وإشعار المتطوعين
+          <span>➕</span> إضافة مبادرة وإرسال دعوات
         </button>
       </div>
 
@@ -391,7 +395,7 @@
           <h2 class="text-xl font-extrabold text-ghayth-dark flex items-center gap-2">
             <span>📥</span> مركز مراجعة طلبات التطوع والساعات والشهادات
           </h2>
-          <p class="text-xs text-slate-500 mt-1">مراجعة طلبات الانضمام، اعتماد ساعات التطوع، والموافقة على طلبات إصدار شهادات التطوع الرسمية للمتطوعين.</p>
+          <p class="text-xs text-slate-500 mt-1">مراجعة طلبات الانضمام، اعتماد ساعات التطوع، ومعاينة واعتماد طلبات إصدار شهادات التطوع الرسمية.</p>
         </div>
         <div id="requests-list-container" class="space-y-4"></div>
       </div>
@@ -469,9 +473,30 @@
 
   <div id="print-area" class="hidden"></div>
 
-  <!-- مربع حوار موافقة / رفض / تعديل الطلب مع ملاحظات المدير -->
+  <!-- نافذة عرض تفاصيل المدعوين واستجاباتهم للمبادرة وتصديرها Excel -->
+  <div id="invitations-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+      <div class="flex flex-wrap justify-between items-center gap-2 border-b pb-3 mb-4">
+        <div>
+          <h3 id="inv-modal-title" class="text-lg font-extrabold text-ghayth-dark">📊 سجل المدعوين والاستجابات للمبادرة</h3>
+          <p id="inv-modal-subtitle" class="text-xs text-slate-500 mt-0.5"></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportInitiativeInvitationsExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow transition">
+            📥 تصدير Excel
+          </button>
+          <button onclick="closeInvitationsModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold px-2">✕</button>
+        </div>
+      </div>
+
+      <div id="inv-modal-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5 text-center"></div>
+      <div id="inv-modal-lists" class="space-y-4 text-xs"></div>
+    </div>
+  </div>
+
+  <!-- مربع حوار موافقة / رفض / تعديل الطلب مع ملاحظات المدير ومعاينة الشهادة -->
   <div id="review-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-6 shadow-2xl">
       <div class="flex justify-between items-center border-b pb-3 mb-4">
         <h3 id="review-modal-title" class="text-lg font-extrabold text-ghayth-dark">مراجعة واعتماد الطلب</h3>
         <button onclick="closeReviewModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
@@ -479,6 +504,12 @@
       <form onsubmit="confirmProcessRequest(event)" class="space-y-4 text-sm">
         <input type="hidden" id="rev-req-id" />
         <div id="rev-req-summary" class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-relaxed"></div>
+
+        <!-- معاينة حية لشكل ومحتوى شهادة التطوع عند مراجعة طلب الشهادة -->
+        <div id="rev-cert-preview-box" class="hidden space-y-2">
+          <p class="text-xs font-extrabold text-ghayth-dark">📜 معاينة شكل ومحتوى شهادة التطوع التي ستُمنح للمتطوع:</p>
+          <div id="rev-cert-preview-content" class="border-2 border-teal-600 rounded-xl p-3 bg-white shadow-inner overflow-x-auto"></div>
+        </div>
 
         <div>
           <label class="block font-bold text-xs mb-1">القرار الإداري *</label>
@@ -675,17 +706,23 @@
     </div>
   </div>
 
-  <!-- نافذة إضافة مبادرة مع خيار تحديد الفئات المستهدفة لإرسال البريد الإلكتروني -->
+  <!-- نافذة إضافة مبادرة / مشروع -->
   <div id="initiative-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
       <div class="flex justify-between items-center border-b pb-3 mb-4">
-        <h3 class="text-lg font-extrabold text-ghayth-dark">🚀 إضافة مبادرة جديدة وإشعار المتطوعين</h3>
+        <h3 class="text-lg font-extrabold text-ghayth-dark">🚀 إضافة مبادرة / مشروع وإرسال دعوات المشاركة</h3>
         <button onclick="closeInitiativeModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
       </div>
       <form onsubmit="saveInitiative(event)" class="space-y-3.5 text-sm">
-        <div>
-          <label class="block font-bold mb-1">اسم المبادرة / المشروع *</label>
-          <input type="text" id="i-title" required class="w-full border rounded-xl px-3 py-2" />
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold mb-1">اسم المبادرة / المشروع *</label>
+            <input type="text" id="i-title" required class="w-full border rounded-xl px-3 py-2" />
+          </div>
+          <div>
+            <label class="block font-bold mb-1">البرنامج التابع له (في إدارة البرامج) *</label>
+            <input type="text" id="i-program" required value="برنامج مبادرون" placeholder="مثال: برنامج مبادرون / حرفة ورقم" class="w-full border rounded-xl px-3 py-2" />
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -716,11 +753,8 @@
           <textarea id="i-desc" rows="2" required class="w-full border rounded-xl px-3 py-2"></textarea>
         </div>
 
-        <!-- خيار تحديد فئات المتطوعين لإرسال دعوة المشاركة عبر البريد الإلكتروني -->
         <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <label class="text-xs font-extrabold text-amber-950">📧 الفئات التي ستصلها دعوة المشاركة عبر البريد الإلكتروني (مع رابط المبادرة):</label>
-          </div>
+          <label class="block text-xs font-extrabold text-amber-950">📧 الفئات التي ستصلها الدعوة (عبر البريد الإلكتروني + إشعارات المنصة):</label>
           <div class="flex flex-wrap gap-2 text-xs">
             <label class="inline-flex items-center gap-1.5 bg-white border border-amber-300 px-2.5 py-1 rounded-lg font-bold cursor-pointer">
               <input type="checkbox" id="init-target-all" onchange="toggleInitTargets(this.checked)" checked class="accent-ghayth-teal" />
@@ -789,10 +823,11 @@
     const ORG_LEVELS = [
       { key: 'trustees', label: 'مجلس الأمناء (المؤسسون)', badge: 'bg-purple-100 text-purple-900 border-purple-300', border: 'border-purple-500' },
       { key: 'board', label: 'مجلس الإدارة', badge: 'bg-amber-100 text-amber-900 border-amber-300', border: 'border-amber-500' },
-      { key: 'executive', label: 'الإدارة التنفيذية', badge: 'bg-teal-100 text-teal-900 border-teal-300', border: 'border-ghayth-teal' },
-      { key: 'programs', label: 'إدارة البرامج', badge: 'bg-sky-100 text-sky-900 border-sky-300', border: 'border-sky-500' },
-      { key: 'operations', label: 'إدارة العمليات', badge: 'bg-indigo-100 text-indigo-900 border-indigo-300', border: 'border-indigo-500' },
-      { key: 'advisors', label: 'المستشارون', badge: 'bg-rose-100 text-rose-900 border-rose-300', border: 'border-rose-400' },
+      { key: 'executive', label: 'المدير العام (الإدارة التنفيذية)', badge: 'bg-teal-100 text-teal-900 border-teal-300', border: 'border-ghayth-teal' },
+      { key: 'advisors', label: 'المستشارون (يتبعون للمدير العام)', badge: 'bg-rose-100 text-rose-900 border-rose-300', border: 'border-rose-400' },
+      { key: 'office_managers', label: 'مدراء المكاتب (يتبعون للمدير العام)', badge: 'bg-cyan-100 text-cyan-900 border-cyan-300', border: 'border-cyan-500' },
+      { key: 'operations', label: 'إدارة العمليات (تندرج تحتها الأقسام)', badge: 'bg-indigo-100 text-indigo-900 border-indigo-300', border: 'border-indigo-500' },
+      { key: 'programs', label: 'إدارة البرامج (تندرج تحتها البرامج والمشاريع)', badge: 'bg-sky-100 text-sky-900 border-sky-300', border: 'border-sky-500' },
       { key: 'initiator', label: 'مبادر', badge: 'bg-orange-100 text-orange-900 border-orange-300', border: 'border-orange-400' },
       { key: 'volunteer', label: 'متطوع مكلف بمهام', badge: 'bg-emerald-100 text-emerald-900 border-emerald-300', border: 'border-emerald-400' },
       { key: 'staff', label: 'موظف', badge: 'bg-slate-100 text-slate-800 border-slate-300', border: 'border-slate-400' }
@@ -828,9 +863,9 @@
         id: 'm1', name: 'فاطمة الآمنة', email: '', country: 'سوريا', gov: 'إدلب', address: 'إدلب المدينة', lat: 35.9315, lng: 36.6350, phone: '+963 900 000 001', hours: 320,
         commitment: 'full', dedicationPercent: 100, commitmentDays: 5,
         roles: [
-          { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees' },
-          { title: 'رئيس مجلس الإدارة', level: 'board' },
-          { title: 'مشرف البرامج التنموية والتمكين', level: 'programs' }
+          { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees', unit: '' },
+          { title: 'رئيس مجلس الإدارة', level: 'board', unit: '' },
+          { title: 'مشرف البرامج التنموية', level: 'programs', unit: 'برنامج حِرفة ورقم' }
         ],
         initiatives: ['حرفة ورقم', 'مبادرون', 'التراث والسلام في قلعة حارم'],
         prefDays: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء'], prefTimes: ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)'],
@@ -840,10 +875,10 @@
         id: 'm2', name: 'محمد أنور علي العلي', email: 'anwar2n@gmail.com', country: 'سوريا', gov: 'إدلب', address: 'إدلب', lat: 35.9290, lng: 36.6310, phone: '+963 951 353 018', hours: 340,
         commitment: 'full', dedicationPercent: 100, commitmentDays: 5,
         roles: [
-          { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees' },
-          { title: 'عضو مجلس الإدارة ومنسق الشراكات', level: 'board' },
-          { title: 'المدير العام والقائد التنفيذي', level: 'executive' },
-          { title: 'قائد برنامج مبادرون لتأهيل المتطوعين', level: 'programs' }
+          { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees', unit: '' },
+          { title: 'عضو مجلس الإدارة ومنسق الشراكات', level: 'board', unit: '' },
+          { title: 'المدير العام للجمعية', level: 'executive', unit: '' },
+          { title: 'قائد برنامج مبادرون', level: 'programs', unit: 'برنامج مبادرون' }
         ],
         initiatives: ['مبادرون', 'حرفة ورقم', 'سوريا تستحق الحياة (ERW)', 'التراث والسلام في قلعة حارم'],
         prefDays: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء'], prefTimes: ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)'],
@@ -853,19 +888,51 @@
         id: 'm3', name: 'إبتهال عدواني', email: '', country: 'سوريا', gov: 'إدلب', address: 'إدلب', lat: 35.9340, lng: 36.6380, phone: '+963 900 000 003', hours: 260,
         commitment: 'partial', dedicationPercent: 60, commitmentDays: 3,
         roles: [
-          { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees' },
-          { title: 'أمين السر وعضو مجلس الإدارة', level: 'board' }
+          { title: 'عضو مجلس الأمناء المؤسس', level: 'trustees', unit: '' },
+          { title: 'أمين السر وعضو مجلس الإدارة', level: 'board', unit: '' }
         ],
         initiatives: ['مبادرون', 'كفالة تعليم الأيتام في تفتناز'],
         prefDays: ['الأحد', 'الثلاثاء', 'الخميس'], prefTimes: ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)'],
         bio: 'مسؤولة التوثيق المؤسسي وإدارة محاضر الاجتماعات ومتابعة الامتثال الإداري والقانوني للجمعية.'
+      },
+      {
+        id: 'm4', name: 'كندا الحوراني', email: '', country: 'سوريا', gov: 'دمشق', address: 'دمشق - المزة', lat: 33.5050, lng: 36.2550, phone: '+963 900 000 004', hours: 210,
+        commitment: 'partial', dedicationPercent: 40, commitmentDays: 2,
+        roles: [
+          { title: 'مدير مكتب دمشق', level: 'office_managers', unit: 'مكتب دمشق' },
+          { title: 'منسقة البرامج المجتمعية', level: 'programs', unit: 'برنامج التمكين المجتمعي' }
+        ],
+        initiatives: ['حرفة ورقم', 'سوريا تستحق الحياة (ERW)'],
+        prefDays: ['الجمعة', 'السبت'], prefTimes: ['ظهراً (12 م - 4 م)', 'عن بُعد (أونلاين)'],
+        bio: 'تدير مكتب دمشق وتنسيق الأنشطة الميدانية والتواصل المجتمعي.'
+      },
+      {
+        id: 'm5', name: 'إسراء رواس', email: '', country: 'سوريا', gov: 'حلب', address: 'حلب', lat: 36.2021, lng: 37.1343, phone: '+963 900 000 005', hours: 195,
+        commitment: 'partial', dedicationPercent: 60, commitmentDays: 3,
+        roles: [
+          { title: 'مستشارة التدريب وبناء القدرات', level: 'advisors', unit: '' },
+          { title: 'مسؤولة المتابعة والتقييم (MEAL)', level: 'programs', unit: 'برنامج مبادرون' }
+        ],
+        initiatives: ['مبادرون', 'كفالة تعليم الأيتام في تفتناز'],
+        prefDays: ['الإثنين', 'الأربعاء', 'الجمعة'], prefTimes: ['مساءً (4 م - 8 م)', 'عن بُعد (أونلاين)'],
+        bio: 'تشرف على قياس أثر المشاريع وتصميم استبيانات التقييم الميداني وضمان جودة المخرجات التدريبية.'
+      },
+      {
+        id: 'm6', name: 'عبد الرزاق بكور', email: '', country: 'سوريا', gov: 'حماة', address: 'حماة', lat: 35.1318, lng: 36.7578, phone: '+963 900 000 006', hours: 230,
+        commitment: 'full', dedicationPercent: 100, commitmentDays: 5,
+        roles: [
+          { title: 'منسق اللوجستيات والسلامة', level: 'operations', unit: 'قسم اللوجستيات والسلامة الميدانية' }
+        ],
+        initiatives: ['سوريا تستحق الحياة (ERW)', 'التراث والسلام في قلعة حارم'],
+        prefDays: ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء'], prefTimes: ['صباحاً (8 ص - 12 م)', 'ظهراً (12 م - 4 م)'],
+        bio: 'يدير قسم اللوجستيات والسلامة الميدانية وتنفيذ جلسات التوعية من مخلفات الحرب.'
       }
     ];
 
     const DEFAULT_INITIATIVES = [
-      { id: 'i1', title: 'برنامج مبادرون لتمكين المتطوعين', lead: 'محمد أنور علي العلي', location: 'إدلب', volunteers: 45, hours: 540, partners: 'جمعية غيث لأجل الإنسانية', desc: 'برنامج تأهيلي متكامل لتدريب المتطوعين على كتابة المشاريع، القيادة الميدانية، والمبادئ الإنسانية.' },
-      { id: 'i2', title: 'مبادرة حِرفة ورقم (Craft & Click)', lead: 'فاطمة الآمنة', location: 'إدلب', volunteers: 32, hours: 480, partners: 'المديرية العامة للآثار والمتاحف • الاتحاد العام للحرفيين', desc: 'تمكين الأسر التي تعيلها نساء عبر الحفاظ على الحرف التراثية وتسويقها إلكترونياً.' },
-      { id: 'i3', title: 'حملة سوريا تستحق الحياة (التوعية بمخلفات الحرب ERW)', lead: 'عبد الرزاق بكور', location: 'إدلب وحماة', volunteers: 28, hours: 360, partners: 'بالتعاون مع مجموعة استشارات الألغام (MAG)', desc: 'حملة توعية رقمية وميدانية للحد من مخاطر مخلفات الحرب غير المنفجرة وحماية المجتمعات المحلية.' }
+      { id: 'i1', program: 'برنامج مبادرون', title: 'تأهيل الدفعة الأولى من القيادات التطوعية', lead: 'محمد أنور علي العلي', location: 'إدلب', volunteers: 45, hours: 540, partners: 'جمعية غيث لأجل الإنسانية', desc: 'مشروع تدريبي لتأهيل المتطوعين على كتابة المشاريع والقيادة الميدانية.', invitations: [] },
+      { id: 'i2', program: 'برنامج حِرفة ورقم', title: 'تمكين الحرفيات وتسويق المنتجات التراثية', lead: 'فاطمة الآمنة', location: 'إدلب', volunteers: 32, hours: 480, partners: 'المديرية العامة للآثار والمتاحف • الاتحاد العام للحرفيين', desc: 'تمكين الأسر التي تعيلها نساء عبر الحفاظ على الحرف التراثية وتسويقها إلكترونياً.', invitations: [] },
+      { id: 'i3', program: 'برنامج الحماية والتوعية', title: 'حملة سوريا تستحق الحياة (التوعية بمخلفات الحرب ERW)', lead: 'عبد الرزاق بكور', location: 'إدلب وحماة', volunteers: 28, hours: 360, partners: 'مجموعة استشارات الألغام (MAG)', desc: 'حملة توعية رقمية وميدانية للحد من مخاطر مخلفات الحرب غير المنفجرة.', invitations: [] }
     ];
 
     let settings = JSON.parse(localStorage.getItem('ghayth_settings_v2')) || DEFAULT_SETTINGS;
@@ -881,20 +948,40 @@
     let leafletMap = null;
     let markersLayer = null;
     let tempCapturedCoords = { lat: null, lng: null };
+    let activeInvitationsModalInitId = null;
 
-    // القائمة الجانبية المنسدلة
-    function toggleSidebarMenu() {
+    function openSidebarMenu() {
       const drawer = document.getElementById('sidebar-drawer');
       const backdrop = document.getElementById('sidebar-backdrop');
       if (!drawer || !backdrop) return;
-      const isClosed = drawer.classList.contains('translate-x-full');
-      if (isClosed) {
-        drawer.classList.remove('translate-x-full');
-        backdrop.classList.remove('hidden');
-      } else {
-        drawer.classList.add('translate-x-full');
-        backdrop.classList.add('hidden');
+      backdrop.classList.remove('hidden');
+      drawer.style.display = 'flex';
+      setTimeout(() => drawer.classList.remove('translate-x-full'), 10);
+    }
+
+    function closeSidebarMenu() {
+      const drawer = document.getElementById('sidebar-drawer');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (!drawer || !backdrop) return;
+      drawer.classList.add('translate-x-full');
+      backdrop.classList.add('hidden');
+      setTimeout(() => { drawer.style.display = 'none'; }, 280);
+    }
+
+    function formatPhoneForWhatsApp(phone) {
+      if (!phone) return "";
+      let cleaned = String(phone).replace(/[^\d+]/g, '').replace(/^\+/, '');
+      if (cleaned.startsWith('00')) cleaned = cleaned.substring(2);
+      if (cleaned.startsWith('09') && cleaned.length === 10) {
+        cleaned = '963' + cleaned.substring(1);
       }
+      return cleaned;
+    }
+
+    // استخراج اسم المدير العام ديناميكياً من قاعدة البيانات لتوقيع الشهادة باسمه فقط
+    function getGeneralDirectorName() {
+      const gd = members.find(m => (m.roles || []).some(r => r.level === 'executive'));
+      return gd ? gd.name : 'أ. محمد أنور علي العلي';
     }
 
     function populateCountriesDropdown(countrySelectId, govSelectId, selectedCountry = "سوريا", selectedGov = "") {
@@ -1029,28 +1116,52 @@
       const listEl = document.getElementById('notifications-list');
       const bellBadge = document.getElementById('notif-bell-count');
       const reqBadge = document.getElementById('pending-requests-badge');
-      if (!listEl) return;
+      if (!listEl || !currentUser) return;
 
-      const actionable = requests.filter(r =>
+      const adminTasks = canReviewRequests() ? requests.filter(r =>
         r.status === 'pending' && ((r.type === 'join' && canApproveJoin()) || ((r.type === 'hours' || r.type === 'certificate') && canApproveHours()))
-      );
+      ) : [];
+
+      const myInvitations = [];
+      initiatives.forEach(init => {
+        const inv = (init.invitations || []).find(v => (v.email || '').toLowerCase() === currentUser.email);
+        if (inv && inv.status === 'pending') {
+          myInvitations.push({ init, inv });
+        }
+      });
+
+      const totalNotifs = adminTasks.length + myInvitations.length;
 
       if (bellBadge) {
-        if (actionable.length > 0) { bellBadge.textContent = actionable.length; bellBadge.classList.remove('hidden'); }
+        if (totalNotifs > 0) { bellBadge.textContent = totalNotifs; bellBadge.classList.remove('hidden'); }
         else bellBadge.classList.add('hidden');
       }
 
       if (reqBadge) {
-        if (actionable.length > 0) { reqBadge.textContent = actionable.length; reqBadge.classList.remove('hidden'); }
+        if (adminTasks.length > 0) { reqBadge.textContent = adminTasks.length; reqBadge.classList.remove('hidden'); }
         else reqBadge.classList.add('hidden');
       }
 
-      if (actionable.length === 0) {
-        listEl.innerHTML = `<div class="p-4 text-center text-slate-400">🎉 لا توجد مهام معلقة حالياً</div>`;
+      if (totalNotifs === 0) {
+        listEl.innerHTML = `<div class="p-4 text-center text-slate-400">🎉 لا توجد إشعارات أو دعوات معلقة حالياً</div>`;
         return;
       }
 
-      listEl.innerHTML = actionable.map(r => {
+      const invHtml = myInvitations.map(({ init }) => `
+        <div class="p-3 bg-amber-50/60 space-y-2">
+          <div>
+            <span class="text-[10px] font-extrabold bg-amber-200 text-amber-950 px-2 py-0.5 rounded-full">🚀 دعوة للمشاركة في مبادرة</span>
+            <p class="font-extrabold text-ghayth-dark mt-1">${init.title}</p>
+            <p class="text-[11px] text-slate-600">📍 ${init.location} • البرنامج: ${init.program || 'عام'}</p>
+          </div>
+          <div class="flex gap-1.5">
+            <button onclick="respondToInitiativeInvitation('${init.id}', 'accepted')" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 rounded-lg transition">✅ موافق</button>
+            <button onclick="respondToInitiativeInvitation('${init.id}', 'declined')" class="flex-1 bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-700 font-bold py-1.5 rounded-lg transition">❌ اعتذار</button>
+          </div>
+        </div>
+      `).join('');
+
+      const tasksHtml = adminTasks.map(r => {
         const title = r.type === 'join' ? '🤝 طلب انضمام جديد' : (r.type === 'certificate' ? '📜 طلب شهادة تطوع' : `⏱️ اعتماد (${r.hours} ساعة)`);
         return `
           <div onclick="switchTab('requests'); toggleNotificationsMenu();" class="p-3 hover:bg-teal-50 cursor-pointer transition">
@@ -1063,6 +1174,55 @@
           </div>
         `;
       }).join('');
+
+      listEl.innerHTML = invHtml + tasksHtml;
+    }
+
+    async function respondToInitiativeInvitation(initiativeId, responseStatus) {
+      if (!currentUser) return;
+      const init = initiatives.find(x => x.id === initiativeId);
+      if (!init) return;
+
+      init.invitations = init.invitations || [];
+      const existingIdx = init.invitations.findIndex(v => (v.email || '').toLowerCase() === currentUser.email);
+      const memberRec = getCurrentMemberRecord();
+      const displayName = memberRec ? memberRec.name : currentUser.name;
+
+      if (existingIdx !== -1) {
+        init.invitations[existingIdx].status = responseStatus;
+        init.invitations[existingIdx].respondedAt = new Date().toISOString().split('T')[0];
+      } else {
+        init.invitations.push({
+          email: currentUser.email,
+          name: displayName,
+          gov: memberRec ? memberRec.gov : '',
+          status: responseStatus,
+          respondedAt: new Date().toISOString().split('T')[0]
+        });
+      }
+
+      localStorage.setItem('ghayth_initiatives_v2', JSON.stringify(initiatives));
+      updateAllViews();
+
+      setSyncStatus("⏳ جاري تسجيل استجابتك...", "bg-amber-500 text-slate-950");
+      try {
+        await fetch(CLOUD_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'respond_invitation',
+            idToken: isTokenExpired(currentUser.idToken) ? "" : currentUser.idToken,
+            userEmail: currentUser.email,
+            userName: displayName,
+            sessionKey: currentUser.sessionKey,
+            initiativeId: initiativeId,
+            responseStatus: responseStatus
+          })
+        });
+        setSyncStatus("✅ تم تسجيل الاستجابة", "bg-emerald-500 text-white");
+      } catch (err) {}
     }
 
     function applyAuthUI() {
@@ -1233,7 +1393,7 @@
     }
 
     async function syncFromCloud(manual = false) {
-      setSyncStatus("⏳ جاري المزامنة مع Google Sheets...", "bg-white/20 text-white");
+      setSyncStatus("⏳ جاري المزامنة...", "bg-white/20 text-white");
       try {
         const res = await fetch(CLOUD_API_URL + "?t=" + Date.now(), { redirect: 'follow' });
         const cloudData = await res.json();
@@ -1262,8 +1422,8 @@
         applySettingsUI();
         applyAuthUI();
         updateAllViews();
-        setSyncStatus("✅ متزامن مع قاعدة البيانات", "bg-emerald-500 text-white");
-        if (manual) alert("تمت مزامنة كافة البيانات مع ملف قاعدة بيانات التطوع الموحد في Google Sheets!");
+        setSyncStatus("✅ متزامن سحابياً", "bg-emerald-500 text-white");
+        if (manual) alert("تمت مزامنة كافة البيانات مع ملف قاعدة بيانات التطوع الموحد!");
       } catch (err) {
         setSyncStatus("⚠️ وضع محلي", "bg-amber-600 text-white");
       }
@@ -1441,7 +1601,6 @@
       );
     }
 
-    // حساب نسبة التفرغ الذكية (100% عند 5 أيام × 8 ساعات = 40 ساعة أسبوعياً، أو عند اختيار متفرغ كامل)
     function recalculateDedication(prefix) {
       const typeSel = document.getElementById(prefix + '-commit-type');
       const partialBox = document.getElementById(prefix + '-partial-schedule-box');
@@ -1535,7 +1694,6 @@
             </div>
           </div>
 
-          <!-- مربع حساب نسبة التفرغ الفورية -->
           <div class="p-3 rounded-xl bg-white border border-teal-200 shadow-xs">
             <div class="flex items-center justify-between mb-1">
               <span class="text-xs font-extrabold text-slate-700">📊 نسبة التفرغ المحسوبة تلقائياً:</span>
@@ -1558,10 +1716,46 @@
       const myRequests = requests.filter(r => (r.email || '').toLowerCase() === currentUser.email);
       const initOptions = initiatives.map(i => `<option value="${i.title}">${i.title}</option>`).join('');
 
+      const myInvites = [];
+      initiatives.forEach(init => {
+        const inv = (init.invitations || []).find(v => (v.email || '').toLowerCase() === currentUser.email);
+        if (inv) myInvites.push({ init, inv });
+      });
+
+      const invitesSectionHtml = myInvites.length ? `
+        <div class="bg-white rounded-2xl shadow-sm border border-amber-200 p-5 mb-6">
+          <h3 class="text-base font-extrabold text-ghayth-dark mb-3 flex items-center gap-2">
+            <span>📨</span> دعوات المشاركة في المبادرات الموجهة إليك (${myInvites.length})
+          </h3>
+          <div class="grid md:grid-cols-2 gap-3">
+            ${myInvites.map(({ init, inv }) => {
+              const statusHtml = inv.status === 'accepted'
+                ? '<span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">✅ وافقت على المشاركة</span>'
+                : (inv.status === 'declined'
+                  ? '<span class="text-xs font-bold text-rose-600 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">❌ اعتذرت عن المشاركة</span>'
+                  : `<div class="flex gap-2">
+                       <button onclick="respondToInitiativeInvitation('${init.id}', 'accepted')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg">✅ موافق</button>
+                       <button onclick="respondToInitiativeInvitation('${init.id}', 'declined')" class="bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-600 text-xs font-bold px-3 py-1.5 rounded-lg">❌ اعتذار</button>
+                     </div>`);
+              return `
+                <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 flex flex-col justify-between gap-2">
+                  <div>
+                    <p class="font-extrabold text-sm text-slate-900">${init.title}</p>
+                    <p class="text-[11px] text-slate-500 mt-0.5">📍 ${init.location} • البرنامج: ${init.program || 'عام'}</p>
+                  </div>
+                  <div class="pt-2 border-t flex items-center justify-between">${statusHtml}</div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : '';
+
       if (!memberRec) {
         const latestJoin = myRequests.find(r => r.type === 'join');
         const hasPendingJoin = latestJoin && latestJoin.status === 'pending';
         container.innerHTML = `
+          ${invitesSectionHtml}
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-3xl mx-auto">
             <h2 class="text-xl font-extrabold text-ghayth-dark mb-1">🤝 طلب الانضمام كمتطوع في الجمعية</h2>
             <p class="text-xs text-slate-600 mb-5">مرحباً <strong>${currentUser.name}</strong> (${currentUser.email}). أكمل بياناتك الجغرافية ونظام تفرغك ليتم إرسال طلبك فوراً لإدارة الجمعية.</p>
@@ -1631,7 +1825,6 @@
         return;
       }
 
-      // حالة شهادة التطوع للمتطوع (لا تظهر للطباعة إلا بعد موافقة الإدارة على طلب الشهادة)
       const certReqs = myRequests.filter(r => r.type === 'certificate');
       const approvedCert = certReqs.find(r => r.status === 'approved');
       const pendingCert = certReqs.find(r => r.status === 'pending');
@@ -1682,6 +1875,7 @@
         : '<span class="text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold px-2.5 py-1 rounded-lg">متطوع معتمد</span>';
 
       container.innerHTML = `
+        ${invitesSectionHtml}
         <div class="grid lg:grid-cols-3 gap-6">
           <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
             <div>
@@ -1838,7 +2032,7 @@
       localStorage.setItem('ghayth_members_v2', JSON.stringify(members));
       updateAllViews();
 
-      setSyncStatus("⏳ جاري حفظ ملفك في Google Sheets...", "bg-amber-500 text-slate-950");
+      setSyncStatus("⏳ جاري حفظ ملفك...", "bg-amber-500 text-slate-950");
       try {
         await fetch(CLOUD_API_URL, {
           method: 'POST',
@@ -1853,7 +2047,7 @@
             profile: memberRec
           })
         });
-        setSyncStatus("✅ متزامن مع قاعدة البيانات", "bg-emerald-500 text-white");
+        setSyncStatus("✅ متزامن سحابياً", "bg-emerald-500 text-white");
         alert("تم حفظ بيانات ملفك الشخصي ونسبة التفرغ وموقعك بنجاح!");
       } catch (err) {}
     }
@@ -2055,6 +2249,35 @@
       }
     }
 
+    // بناء HTML الشهادة الرسمية (موقعة من المدير العام فقط حسب قاعدة البيانات)
+    function buildCertificateHTML(m, compact = false) {
+      const savedLogo = localStorage.getItem('ghayth_logo_v2');
+      const logoTag = savedLogo ? `<img src="${savedLogo}" style="height:${compact ? '55px' : '80px'}; margin:0 auto 10px;" />` : '';
+      const rolesText = (m.roles && m.roles.length) ? m.roles.map(r => r.title).join('، ') : 'متطوع معتمد';
+      const gdName = getGeneralDirectorName();
+
+      return `
+        <div style="border: ${compact ? '4px' : '8px'} double #0F766E; padding: ${compact ? '20px' : '40px'}; text-align: center; font-family: 'Cairo', sans-serif; direction: rtl; background: #FFFFFF;">
+          ${logoTag}
+          <h1 style="color: #0B4F4A; font-size: ${compact ? '18px' : '26px'}; margin: 0;">${settings.orgName}</h1>
+          <p style="color: #64748B; font-size: ${compact ? '11px' : '13px'}; margin: 4px 0 ${compact ? '14px' : '25px'};">${settings.subtitle}</p>
+          <h2 style="background: #FEF3C7; color: #92400E; display: inline-block; padding: ${compact ? '5px 18px' : '8px 30px'}; border-radius: 30px; font-size: ${compact ? '15px' : '22px'};">شهادة شكر وتقدير تطوعية</h2>
+          <p style="font-size: ${compact ? '13px' : '16px'}; margin-top: ${compact ? '14px' : '25px'};">تتقدم إدارة <strong>${settings.orgName}</strong> بجزيل الشكر والتقدير إلى:</p>
+          <h3 style="font-size: ${compact ? '20px' : '28px'}; color: #0F766E; margin: 10px 0;">${m.name}</h3>
+          <p style="font-size: ${compact ? '12px' : '15px'}; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+            وذلك تقديراً لجهوده/ها المتميزة وعطائه/ها الإنساني بصفة: <strong>${rolesText}</strong>،
+            وإتمام <strong>(${m.hours || 0} ساعة تطوعية)</strong> ضمن مبادرات الجمعية في محافظة <strong>${m.gov}</strong>.
+          </p>
+          <div style="margin-top: ${compact ? '25px' : '50px'}; text-align: left; padding-left: 40px; font-size: ${compact ? '12px' : '15px'};">
+            <div style="display: inline-block; text-align: center;">
+              <strong>المدير العام للجمعية</strong><br/>
+              <span style="color: #0B4F4A; font-weight: bold;">${gdName}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function openReviewModal(reqId, defaultDecision = 'approved') {
       const req = requests.find(r => r.id === reqId);
       if (!req) return;
@@ -2066,13 +2289,26 @@
       const isCert = req.type === 'certificate';
       document.getElementById('review-modal-title').textContent = isJoin
         ? 'مراجعة واعتماد طلب انضمام المتطوع'
-        : (isCert ? 'الموافقة على إصدار شهادة التطوع' : 'مراجعة واعتماد ساعات التطوع');
+        : (isCert ? 'معاينة واعتماد شهادة التطوع' : 'مراجعة واعتماد ساعات التطوع');
 
       document.getElementById('rev-req-summary').innerHTML = isJoin
         ? `<strong>المتقدم:</strong> ${req.name} (${req.email})<br/><strong>الموقع:</strong> ${req.country || 'سوريا'} - ${req.gov} (${req.address || '-'}) • <strong>نسبة التفرغ:</strong> ${req.dedicationPercent || 50}%<br/><strong>الخبرات:</strong> ${req.notes}`
         : (isCert
           ? `<strong>المتطوع:</strong> ${req.name} (${req.email})<br/><strong>الطلب:</strong> ${req.notes}`
           : `<strong>المتطوع:</strong> ${req.name}<br/><strong>المبادرة:</strong> ${req.initiative} — <strong>الساعات المطلوبة:</strong> ${req.hours} ساعة<br/><strong>التفاصيل:</strong> ${req.notes}`);
+
+      // إظهار معاينة شكل ومحتوى الشهادة عند مراجعة طلب الشهادة
+      const certPreviewBox = document.getElementById('rev-cert-preview-box');
+      const certPreviewContent = document.getElementById('rev-cert-preview-content');
+      if (isCert) {
+        const m = members.find(x => x.id === req.memberId || (x.email || '').toLowerCase() === (req.email || '').toLowerCase()) || {
+          name: req.name, gov: req.gov || 'إدلب', hours: req.hours || 0, roles: []
+        };
+        certPreviewContent.innerHTML = buildCertificateHTML(m, true);
+        certPreviewBox.classList.remove('hidden');
+      } else {
+        certPreviewBox.classList.add('hidden');
+      }
 
       onChangeReviewDecision();
       const modal = document.getElementById('review-modal');
@@ -2246,12 +2482,12 @@
       if (tabName === 'portal' && !currentUser) return;
 
       const sectionNames = {
-        dashboard: 'لوحة القيادة والتحليل الذكي',
-        volunteers: 'سجل الكادر والمتطوعين والخريطة',
-        orgchart: 'الهيكل التنظيمي ومصفوفة المهام',
-        initiatives: 'المبادرات وساعات التطوع',
+        dashboard: 'الرئيسية ولوحة القيادة',
+        volunteers: 'المتطوعين',
+        orgchart: 'الهيكل التنظيمي',
+        initiatives: 'البرامج والمبادرات',
         portal: 'بوابة المتطوع وملفي الشخصي',
-        requests: 'مركز الطلبات والشهادات',
+        requests: 'الطلبات والشهادات',
         permissions: 'إدارة الصلاحيات والمشرفين'
       };
 
@@ -2285,7 +2521,7 @@
     }
 
     function getLevelInfo(levelKey) {
-      return ORG_LEVELS.find(l => l.key === levelKey) || ORG_LEVELS[7];
+      return ORG_LEVELS.find(l => l.key === levelKey) || ORG_LEVELS[8];
     }
 
     function updateDashboard() {
@@ -2303,7 +2539,8 @@
             <h3 class="font-bold text-sm text-ghayth-dark">${init.title}</h3>
             <span class="text-[11px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full shrink-0">${init.location}</span>
           </div>
-          <p class="text-xs text-slate-600 mt-1.5 line-clamp-2">${init.desc}</p>
+          <p class="text-[11px] font-bold text-sky-800 mt-1">📂 ${init.program || 'برامج الجمعية'}</p>
+          <p class="text-xs text-slate-600 mt-1 line-clamp-2">${init.desc}</p>
           <div class="flex items-center justify-between text-[11px] text-slate-500 mt-3 pt-2 border-t">
             <span>👤 المنسق: <strong>${init.lead}</strong></span>
             <span>⏱️ ${init.hours} ساعة</span>
@@ -2337,7 +2574,7 @@
         const rolesHtml = (m.roles && m.roles.length)
           ? m.roles.map(r => {
               const info = getLevelInfo(r.level);
-              return `<span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border ${info.badge}">${r.title}</span>`;
+              return `<span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border ${info.badge}">${r.title}${r.unit ? ` (${r.unit})` : ''}</span>`;
             }).join('')
           : `<span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg border bg-emerald-50 text-emerald-800 border-emerald-200">متطوع معتمد</span>`;
 
@@ -2346,18 +2583,19 @@
           ? `<span class="text-[11px] bg-teal-50 text-ghayth-dark border border-teal-200 font-bold px-2 py-0.5 rounded-md">🟢 متفرغ (100%)</span>`
           : `<span class="text-[11px] bg-amber-50 text-amber-900 border border-amber-200 font-bold px-2 py-0.5 rounded-md">🟡 متفرغ جزئي (${pct}%)</span>`;
 
-        const initsHtml = (m.initiatives || []).map(i =>
-          `<span class="text-[11px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md"># ${i}</span>`
-        ).join('');
+        const waPhone = formatPhoneForWhatsApp(m.phone);
+        const waBtn = waPhone
+          ? `<a href="https://wa.me/${waPhone}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-lg transition inline-flex items-center gap-1" title="مراسلة عبر واتساب">💬 واتساب</a>`
+          : '';
 
         const cvDownloadBtn = (editable && m.cvData)
-          ? `<a href="${m.cvData}" download="${m.cvName || 'CV'}" class="text-sky-700 hover:bg-sky-50 font-bold px-2 py-1 rounded-lg border border-sky-200">📄 السيرة الذاتية</a>`
+          ? `<a href="${m.cvData}" download="${m.cvName || 'CV'}" class="text-sky-700 hover:bg-sky-50 font-bold px-2 py-1 rounded-lg border border-sky-200">📄 السيرة</a>`
           : '';
 
         const editButtons = editable ? `
           <div class="flex gap-1">
-            <button onclick="printCertificate('${m.id}')" class="text-amber-700 hover:bg-amber-50 font-bold px-2 py-1 rounded-lg border border-amber-200 transition">🏅 شهادة</button>
-            <button onclick="openMemberModal('${m.id}')" class="text-ghayth-teal hover:bg-teal-50 font-bold px-2 py-1 rounded-lg">تعديل / مهام</button>
+            <button onclick="printCertificate('${m.id}')" class="text-amber-700 hover:bg-amber-50 font-bold px-2 py-1 rounded-lg border border-amber-200 transition" title="معاينة وطباعة الشهادة">🏅</button>
+            <button onclick="openMemberModal('${m.id}')" class="text-ghayth-teal hover:bg-teal-50 font-bold px-2 py-1 rounded-lg">تعديل</button>
             <button onclick="deleteMember('${m.id}')" class="text-rose-600 hover:bg-rose-50 font-bold px-2 py-1 rounded-lg">حذف</button>
           </div>` : '';
 
@@ -2376,11 +2614,13 @@
                 </div>
                 ${(m.roles && m.roles.length > 1) ? `<span class="text-[10px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded-full shrink-0">${m.roles.length} مهام</span>` : ''}
               </div>
-              <div class="mt-2.5">${commitmentBadge}</div>
+              <div class="mt-2.5 flex flex-wrap items-center gap-1.5">
+                ${commitmentBadge}
+                ${waBtn}
+              </div>
               <div class="mt-2.5 flex flex-wrap gap-1.5">${rolesHtml}</div>
               <p class="text-xs text-slate-600 mt-3 leading-relaxed">${m.bio || ''}</p>
               ${(m.prefDays && m.prefDays.length) ? `<p class="text-[11px] text-teal-800 bg-teal-50/70 px-2.5 py-1 rounded-lg mt-2.5">📅 متاح: ${m.prefDays.join('، ')}</p>` : ''}
-              ${initsHtml ? `<div class="mt-2.5 flex flex-wrap gap-1">${initsHtml}</div>` : ''}
             </div>
 
             <div class="mt-4 pt-3 border-t flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -2399,84 +2639,161 @@
       const editable = canEditData();
       const assignedMembers = members.filter(m => m.roles && m.roles.length > 0);
 
-      const renderTier = (levelObj) => {
-        const tierMembers = assignedMembers.filter(m => m.roles.some(r => r.level === levelObj.key));
-        if (tierMembers.length === 0 && !editable) return '';
-
-        const cardsHtml = tierMembers.length ? tierMembers.map(m => {
-          const matchedTitles = m.roles.filter(r => r.level === levelObj.key).map(r => r.title).join(' + ');
-          const otherCount = m.roles.length - m.roles.filter(r => r.level === levelObj.key).length;
-          return `
-            <div onclick="${editable ? `openMemberModal('${m.id}')` : ''}" class="${editable ? 'cursor-pointer hover:scale-[1.02]' : ''} bg-white border-2 ${levelObj.border} rounded-xl p-3 shadow-sm min-w-[195px] max-w-[240px] text-center transition">
-              <p class="font-extrabold text-sm text-slate-900">${m.name}</p>
-              <p class="text-xs font-bold text-ghayth-teal mt-1">${matchedTitles}</p>
-              <p class="text-[11px] text-slate-500 mt-1">📍 ${m.gov} • تفرغ ${m.dedicationPercent || (m.commitment === 'full' ? 100 : 50)}%</p>
-              ${otherCount > 0 ? `<span class="inline-block mt-1.5 text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full">+ ${otherCount} مهمة إضافية</span>` : ''}
-            </div>
-          `;
-        }).join('') : `<div class="text-xs text-slate-400 italic py-2">لا يوجد مكلفون حالياً</div>`;
+      const renderPersonCard = (m, levelKey, borderColor) => {
+        const matchedTitles = m.roles.filter(r => r.level === levelKey).map(r => r.title).join(' + ');
+        const avatarHtml = m.photo
+          ? `<img src="${m.photo}" class="w-11 h-11 rounded-full object-cover border-2 border-white shadow mx-auto mb-1.5" />`
+          : `<div class="w-10 h-10 rounded-full bg-ghayth-teal text-white font-extrabold flex items-center justify-center text-sm mx-auto mb-1.5 shadow">${m.name.charAt(0)}</div>`;
 
         return `
-          <div class="w-full flex flex-col items-center">
-            <div class="org-line-v h-5"></div>
-            <div class="text-xs font-extrabold px-4 py-1 rounded-full border ${levelObj.badge} mb-3 shadow-sm">
-              ${levelObj.label} (${tierMembers.length})
-            </div>
-            <div class="flex flex-wrap justify-center gap-3 w-full">${cardsHtml}</div>
+          <div onclick="${editable ? `openMemberModal('${m.id}')` : ''}" class="${editable ? 'cursor-pointer hover:scale-[1.02]' : ''} bg-white border-2 ${borderColor} rounded-xl p-3 shadow-sm min-w-[185px] max-w-[230px] text-center transition">
+            ${avatarHtml}
+            <p class="font-extrabold text-xs text-slate-900">${m.name}</p>
+            <p class="text-[11px] font-bold text-ghayth-teal mt-0.5">${matchedTitles}</p>
+            <p class="text-[10px] text-slate-500 mt-0.5">📍 ${m.gov} • تفرغ ${m.dedicationPercent || (m.commitment === 'full' ? 100 : 50)}%</p>
           </div>
         `;
       };
 
-      const topTiers = ORG_LEVELS.slice(0, 3).map(renderTier).join('');
-      const midTiers = ORG_LEVELS.slice(3, 6);
-      const baseTiers = ORG_LEVELS.slice(6, 9);
+      const renderTopTier = (lvlKey) => {
+        const lvl = getLevelInfo(lvlKey);
+        const list = assignedMembers.filter(m => m.roles.some(r => r.level === lvlKey));
+        return `
+          <div class="w-full flex flex-col items-center">
+            <div class="org-line-v h-5"></div>
+            <div class="text-xs font-extrabold px-4 py-1 rounded-full border ${lvl.badge} mb-3 shadow-sm">${lvl.label} (${list.length})</div>
+            <div class="flex flex-wrap justify-center gap-3">
+              ${list.length ? list.map(m => renderPersonCard(m, lvlKey, lvl.border)).join('') : `<span class="text-xs text-slate-400">فارغ حالياً</span>`}
+            </div>
+          </div>
+        `;
+      };
 
-      const renderParallelColumns = (tierGroup) => `
-        <div class="w-full flex flex-col items-center mt-2">
-          <div class="org-line-v h-6"></div>
-          <div class="w-4/5 org-branch-bar"></div>
-          <div class="grid md:grid-cols-3 gap-4 w-full">
-            ${tierGroup.map(lvl => {
-              const list = assignedMembers.filter(m => m.roles.some(r => r.level === lvl.key));
-              return `
-                <div class="flex flex-col items-center bg-slate-50/70 rounded-2xl p-3 border border-slate-200">
-                  <div class="org-line-v h-4 -mt-3 mb-2"></div>
-                  <span class="text-xs font-extrabold px-3 py-1 rounded-full border ${lvl.badge} mb-3">${lvl.label} (${list.length})</span>
-                  <div class="flex flex-col gap-2.5 w-full items-center">
-                    ${list.length ? list.map(m => {
-                      const matched = m.roles.filter(r => r.level === lvl.key).map(r => r.title).join(' + ');
-                      return `
-                        <div onclick="${editable ? `openMemberModal('${m.id}')` : ''}" class="${editable ? 'cursor-pointer hover:border-ghayth-teal' : ''} bg-white border-2 ${lvl.border} rounded-xl p-2.5 shadow-sm w-full max-w-[240px] text-center transition">
-                          <p class="font-extrabold text-xs text-slate-900">${m.name}</p>
-                          <p class="text-[11px] font-bold text-ghayth-teal mt-0.5">${matched}</p>
-                          <p class="text-[10px] text-slate-500">📍 ${m.gov}</p>
-                        </div>
-                      `;
-                    }).join('') : `<span class="text-[11px] text-slate-400 py-2">فارغ حالياً</span>`}
-                  </div>
-                </div>
-              `;
-            }).join('')}
+      const advisorsList = assignedMembers.filter(m => m.roles.some(r => r.level === 'advisors'));
+      const officeMgrsList = assignedMembers.filter(m => m.roles.some(r => r.level === 'office_managers'));
+
+      const opsMembers = assignedMembers.filter(m => m.roles.some(r => r.level === 'operations'));
+      const opsDepartments = {};
+      opsMembers.forEach(m => {
+        m.roles.filter(r => r.level === 'operations').forEach(r => {
+          const deptName = r.unit || 'قسم العمليات العامة';
+          if (!opsDepartments[deptName]) opsDepartments[deptName] = [];
+          if (!opsDepartments[deptName].some(x => x.id === m.id)) opsDepartments[deptName].push(m);
+        });
+      });
+
+      const progMembers = assignedMembers.filter(m => m.roles.some(r => r.level === 'programs'));
+      const programsMap = {};
+      progMembers.forEach(m => {
+        m.roles.filter(r => r.level === 'programs').forEach(r => {
+          const progName = r.unit || 'البرامج العامة';
+          if (!programsMap[progName]) programsMap[progName] = [];
+          if (!programsMap[progName].some(x => x.id === m.id)) programsMap[progName].push(m);
+        });
+      });
+      initiatives.forEach(init => {
+        const pName = init.program || 'البرامج العامة';
+        if (!programsMap[pName]) programsMap[pName] = [];
+      });
+
+      const opsHtml = Object.keys(opsDepartments).length ? Object.entries(opsDepartments).map(([dept, deptMembers]) => `
+        <div class="bg-indigo-50/60 border border-indigo-200 rounded-xl p-3 space-y-2">
+          <p class="text-xs font-extrabold text-indigo-950 border-b border-indigo-200 pb-1">🏢 ${dept}</p>
+          <div class="flex flex-wrap justify-center gap-2">
+            ${deptMembers.map(m => renderPersonCard(m, 'operations', 'border-indigo-400')).join('')}
           </div>
         </div>
-      `;
+      `).join('') : `<p class="text-xs text-slate-400 text-center py-2">لا توجد أقسام مسجلة تحت إدارة العمليات بعد</p>`;
+
+      const progsHtml = Object.keys(programsMap).length ? Object.entries(programsMap).map(([progName, pMembers]) => {
+        const progProjects = initiatives.filter(i => (i.program || 'البرامج العامة') === progName);
+        return `
+          <div class="bg-sky-50/70 border border-sky-200 rounded-xl p-3 space-y-2.5">
+            <p class="text-xs font-extrabold text-sky-950 border-b border-sky-200 pb-1">📂 ${progName}</p>
+            <div class="flex flex-wrap justify-center gap-2">
+              ${pMembers.map(m => renderPersonCard(m, 'programs', 'border-sky-400')).join('')}
+            </div>
+            ${progProjects.length ? `
+              <div class="bg-white/90 rounded-lg p-2 border border-sky-100 text-right">
+                <p class="text-[11px] font-extrabold text-amber-800 mb-1">🚀 المشاريع والمبادرات المندرجة تحته:</p>
+                <ul class="space-y-1 text-[11px] text-slate-700">
+                  ${progProjects.map(pr => `<li class="flex justify-between"><span>• ${pr.title}</span><span class="text-slate-400">(${pr.location})</span></li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('') : `<p class="text-xs text-slate-400 text-center py-2">لا توجد برامج مسجلة تحت إدارة البرامج بعد</p>`;
+
+      const baseLevels = ['initiator', 'volunteer', 'staff'];
+      const baseHtml = baseLevels.map(lvlKey => {
+        const lvl = getLevelInfo(lvlKey);
+        const list = assignedMembers.filter(m => m.roles.some(r => r.level === lvlKey));
+        return `
+          <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex flex-col items-center">
+            <span class="text-xs font-extrabold px-3 py-1 rounded-full border ${lvl.badge} mb-2.5">${lvl.label} (${list.length})</span>
+            <div class="flex flex-wrap justify-center gap-2">
+              ${list.length ? list.map(m => renderPersonCard(m, lvlKey, lvl.border)).join('') : `<span class="text-[11px] text-slate-400">فارغ</span>`}
+            </div>
+          </div>
+        `;
+      }).join('');
 
       document.getElementById('org-tree-container').innerHTML = `
-        <div class="min-w-[780px] flex flex-col items-center py-2">
+        <div class="min-w-[820px] flex flex-col items-center py-2">
           <div class="bg-ghayth-dark text-white px-7 py-3.5 rounded-2xl shadow-md text-center">
             <p class="font-extrabold text-base">${settings.orgName}</p>
-            <p class="text-xs text-teal-200">${settings.decree} — التسلسل التنظيمي والحوكمة</p>
+            <p class="text-xs text-teal-200">${settings.decree} — الهيكل التنظيمي المعتمد</p>
           </div>
-          ${topTiers}
-          ${renderParallelColumns(midTiers)}
-          ${renderParallelColumns(baseTiers)}
+
+          ${renderTopTier('trustees')}
+          ${renderTopTier('board')}
+          ${renderTopTier('executive')}
+
+          <div class="org-line-v h-5"></div>
+          <div class="w-4/5 org-branch-bar"></div>
+          <div class="grid md:grid-cols-2 gap-4 w-full mb-2">
+            <div class="bg-rose-50/50 border border-rose-200 rounded-2xl p-3 flex flex-col items-center">
+              <span class="text-xs font-extrabold px-3 py-1 rounded-full border bg-rose-100 text-rose-900 border-rose-300 mb-2.5">🧠 المستشارون (يتبعون للمدير العام)</span>
+              <div class="flex flex-wrap justify-center gap-2">
+                ${advisorsList.length ? advisorsList.map(m => renderPersonCard(m, 'advisors', 'border-rose-400')).join('') : `<span class="text-xs text-slate-400">لا يوجد مستشارون حالياً</span>`}
+              </div>
+            </div>
+            <div class="bg-cyan-50/50 border border-cyan-200 rounded-2xl p-3 flex flex-col items-center">
+              <span class="text-xs font-extrabold px-3 py-1 rounded-full border bg-cyan-100 text-cyan-900 border-cyan-300 mb-2.5">🏢 مدراء المكاتب (يتبعون للمدير العام)</span>
+              <div class="flex flex-wrap justify-center gap-2">
+                ${officeMgrsList.length ? officeMgrsList.map(m => renderPersonCard(m, 'office_managers', 'border-cyan-500')).join('') : `<span class="text-xs text-slate-400">لا يوجد مدراء مكاتب حالياً</span>`}
+              </div>
+            </div>
+          </div>
+
+          <div class="org-line-v h-5"></div>
+          <div class="w-4/5 org-branch-bar"></div>
+          <div class="grid md:grid-cols-2 gap-5 w-full">
+            <div class="bg-white border-2 border-indigo-200 rounded-2xl p-4 space-y-3">
+              <div class="text-center">
+                <span class="text-xs font-extrabold px-4 py-1 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-300">⚙️ إدارة العمليات (الأقسام التابعة)</span>
+              </div>
+              ${opsHtml}
+            </div>
+
+            <div class="bg-white border-2 border-sky-200 rounded-2xl p-4 space-y-3">
+              <div class="text-center">
+                <span class="text-xs font-extrabold px-4 py-1 rounded-full bg-sky-100 text-sky-900 border border-sky-300">📊 إدارة البرامج (البرامج والمشاريع المندرجة)</span>
+              </div>
+              ${progsHtml}
+            </div>
+          </div>
+
+          <div class="org-line-v h-5"></div>
+          <div class="grid md:grid-cols-3 gap-4 w-full">${baseHtml}</div>
         </div>
       `;
 
       const matrixBody = document.getElementById('roles-matrix-body');
       matrixBody.innerHTML = assignedMembers.map(m => {
-        const primary = m.roles[0] ? `<span class="text-xs font-bold px-2 py-0.5 rounded border ${getLevelInfo(m.roles[0].level).badge}">${m.roles[0].title}</span>` : '-';
-        const secondary = m.roles.slice(1).map(r => `<span class="inline-block border ${getLevelInfo(r.level).badge} text-xs font-bold px-2 py-0.5 rounded-md ml-1 mb-1">${r.title}</span>`).join('') || '<span class="text-xs text-slate-400">مهمة واحدة</span>';
+        const primary = m.roles[0] ? `<span class="text-xs font-bold px-2 py-0.5 rounded border ${getLevelInfo(m.roles[0].level).badge}">${m.roles[0].title}${m.roles[0].unit ? ` (${m.roles[0].unit})` : ''}</span>` : '-';
+        const secondary = m.roles.slice(1).map(r => `<span class="inline-block border ${getLevelInfo(r.level).badge} text-xs font-bold px-2 py-0.5 rounded-md ml-1 mb-1">${r.title}${r.unit ? ` (${r.unit})` : ''}</span>`).join('') || '<span class="text-xs text-slate-400">مهمة واحدة</span>';
         const pct = m.dedicationPercent || (m.commitment === 'full' ? 100 : 50);
         const commitText = `${m.commitment === 'full' ? 'متفرغ' : 'جزئي'} (${pct}%)`;
         const actionCell = editable ? `<td class="p-3"><button onclick="openMemberModal('${m.id}')" class="text-xs bg-slate-100 hover:bg-ghayth-teal hover:text-white font-bold px-2.5 py-1 rounded-lg transition">تعديل المهام</button></td>` : '';
@@ -2493,6 +2810,27 @@
       }).join('');
     }
 
+    // طباعة الهيكل التنظيمي كرسم بصري كامل (PDF)
+    function printOrgChartVisualPDF() {
+      const treeHtml = document.getElementById('org-tree-container').innerHTML;
+      const savedLogo = localStorage.getItem('ghayth_logo_v2');
+      const logoTag = savedLogo ? `<img src="${savedLogo}" style="height:60px; margin:0 auto 8px;" />` : '';
+      const printArea = document.getElementById('print-area');
+      printArea.classList.remove('hidden');
+      printArea.innerHTML = `
+        <div style="font-family: 'Cairo', sans-serif; direction: rtl; padding: 10px;">
+          <div style="text-align:center; margin-bottom:15px;">
+            ${logoTag}
+            <h2 style="color:#0B4F4A; font-size:20px; margin:0;">${settings.orgName} — المخطط التنظيمي الهرمي</h2>
+            <p style="font-size:11px; color:#64748B;">${settings.subtitle}</p>
+          </div>
+          <div style="zoom: 0.78;">${treeHtml}</div>
+        </div>
+      `;
+      window.print();
+      printArea.classList.add('hidden');
+    }
+
     function renderInitiatives() {
       const editable = canEditData();
       const grid = document.getElementById('initiatives-grid');
@@ -2501,12 +2839,32 @@
 
       grid.innerHTML = initiatives.map(init => {
         const isHighlighted = highlightedInitId && init.id === highlightedInitId;
+        const invs = init.invitations || [];
+        const totalInv = invs.length;
+        const acceptedCount = invs.filter(v => v.status === 'accepted').length;
+        const declinedCount = invs.filter(v => v.status === 'declined').length;
+        const pendingCount = invs.filter(v => v.status === 'pending').length;
+
+        const myInv = currentUser ? invs.find(v => (v.email || '').toLowerCase() === currentUser.email) : null;
+        const myResponseBar = myInv ? `
+          <div class="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2 text-xs">
+            <span class="font-bold text-amber-950">دعوتك: ${myInv.status === 'accepted' ? '✅ وافقت' : (myInv.status === 'declined' ? '❌ اعتذرت' : '⏳ بانتظار ردك')}</span>
+            <div class="flex gap-1.5">
+              <button onclick="respondToInitiativeInvitation('${init.id}', 'accepted')" class="bg-emerald-600 text-white font-bold px-2.5 py-1 rounded-lg">موافق</button>
+              <button onclick="respondToInitiativeInvitation('${init.id}', 'declined')" class="bg-rose-600 text-white font-bold px-2.5 py-1 rounded-lg">اعتذار</button>
+            </div>
+          </div>
+        ` : '';
+
         return `
           <div id="init-card-${init.id}" class="bg-white rounded-2xl shadow-sm border ${isHighlighted ? 'border-2 border-amber-500 ring-4 ring-amber-100' : 'border-slate-200'} p-5 flex flex-col justify-between">
             <div>
               ${isHighlighted ? '<span class="inline-block mb-2 text-[11px] bg-amber-500 text-slate-950 font-extrabold px-2.5 py-0.5 rounded-full">🌟 مبادرة مدعوّ للمشاركة فيها</span>' : ''}
               <div class="flex justify-between items-start gap-2">
-                <h3 class="font-extrabold text-base text-ghayth-dark">${init.title}</h3>
+                <div>
+                  <span class="text-[11px] font-extrabold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md">📂 ${init.program || 'برامج الجمعية'}</span>
+                  <h3 class="font-extrabold text-base text-ghayth-dark mt-1">${init.title}</h3>
+                </div>
                 <span class="text-xs bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full shrink-0">📍 ${init.location}</span>
               </div>
               <p class="text-xs text-slate-600 mt-2 leading-relaxed">${init.desc}</p>
@@ -2514,10 +2872,27 @@
                 <p><strong>المنسق المسؤول:</strong> ${init.lead}</p>
                 <p><strong>الشركاء:</strong> ${init.partners || 'مبادرة ذاتية'}</p>
               </div>
+
+              <!-- ملخص الدعوات والاستجابات الأربع -->
+              <div class="mt-3 p-3 rounded-xl bg-teal-50/60 border border-teal-100 text-xs">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <span class="font-extrabold text-ghayth-dark">📨 المرسل لهم الدعوة: ${totalInv}</span>
+                  <button onclick="openInvitationsModal('${init.id}')" class="bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold px-2.5 py-1 rounded-lg text-[11px] transition">
+                    📋 قوائم الأسماء وتصدير Excel
+                  </button>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5 text-center text-[11px] font-bold">
+                  <div class="bg-emerald-100 text-emerald-900 py-1 rounded-lg">✅ مستجيبون: ${acceptedCount}</div>
+                  <div class="bg-amber-100 text-amber-900 py-1 rounded-lg">⏳ لم يردوا: ${pendingCount}</div>
+                  <div class="bg-rose-100 text-rose-900 py-1 rounded-lg">❌ لم يشاركوا: ${declinedCount}</div>
+                </div>
+              </div>
+              ${myResponseBar}
             </div>
+
             <div class="mt-4 pt-3 border-t flex items-center justify-between text-xs">
               <div class="flex gap-3 font-bold text-ghayth-teal">
-                <span>👥 ${init.volunteers} متطوع</span>
+                <span>👥 ${init.volunteers} مستهدف</span>
                 <span>⏱️ ${init.hours} ساعة</span>
               </div>
               ${editable ? `<button onclick="deleteInitiative('${init.id}')" class="text-rose-600 hover:underline font-bold">حذف</button>` : ''}
@@ -2527,6 +2902,78 @@
       }).join('');
     }
 
+    function openInvitationsModal(initId) {
+      const init = initiatives.find(x => x.id === initId);
+      if (!init) return;
+      activeInvitationsModalInitId = initId;
+
+      const invs = init.invitations || [];
+      const accepted = invs.filter(v => v.status === 'accepted');
+      const pending = invs.filter(v => v.status === 'pending');
+      const declined = invs.filter(v => v.status === 'declined');
+
+      document.getElementById('inv-modal-title').textContent = `📊 استجابات المتطوعين: ${init.title}`;
+      document.getElementById('inv-modal-subtitle').textContent = `البرنامج: ${init.program || 'عام'} • الموقع: ${init.location}`;
+
+      document.getElementById('inv-modal-stats').innerHTML = `
+        <div class="p-3 rounded-xl bg-slate-100 border border-slate-200"><p class="text-[11px] text-slate-500 font-bold">المرسل لهم الدعوة</p><p class="text-xl font-extrabold text-slate-900">${invs.length}</p></div>
+        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200"><p class="text-[11px] text-emerald-700 font-bold">✅ المستجيبون للمشاركة</p><p class="text-xl font-extrabold text-emerald-800">${accepted.length}</p></div>
+        <div class="p-3 rounded-xl bg-amber-50 border border-amber-200"><p class="text-[11px] text-amber-700 font-bold">⏳ لم يقوموا بالرد</p><p class="text-xl font-extrabold text-amber-800">${pending.length}</p></div>
+        <div class="p-3 rounded-xl bg-rose-50 border border-rose-200"><p class="text-[11px] text-rose-700 font-bold">❌ لم يستجيبوا (اعتذروا)</p><p class="text-xl font-extrabold text-rose-800">${declined.length}</p></div>
+      `;
+
+      const renderNameBadges = (arr, colorCls) => arr.length
+        ? arr.map(v => `<span class="inline-block ${colorCls} font-bold px-2.5 py-1 rounded-lg ml-1.5 mb-1.5">${v.name} <span class="opacity-70 font-normal">(${v.gov || ''})</span></span>`).join('')
+        : '<span class="text-slate-400">لا يوجد أسماء في هذه القائمة</span>';
+
+      document.getElementById('inv-modal-lists').innerHTML = `
+        <div class="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/30">
+          <p class="font-extrabold text-emerald-900 mb-2">✅ قائمة المستجيبين والموافقين على المشاركة (${accepted.length}):</p>
+          <div>${renderNameBadges(accepted, 'bg-emerald-100 text-emerald-900')}</div>
+        </div>
+        <div class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/30">
+          <p class="font-extrabold text-amber-900 mb-2">⏳ قائمة الذين لم يقوموا بالرد بعد (${pending.length}):</p>
+          <div>${renderNameBadges(pending, 'bg-amber-100 text-amber-900')}</div>
+        </div>
+        <div class="p-3.5 rounded-xl border border-rose-200 bg-rose-50/30">
+          <p class="font-extrabold text-rose-900 mb-2">❌ قائمة المعتذرين (${declined.length}):</p>
+          <div>${renderNameBadges(declined, 'bg-rose-100 text-rose-900')}</div>
+        </div>
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50">
+          <p class="font-extrabold text-slate-800 mb-2">📨 القائمة المختصرة لجميع المدعوين (${invs.length}):</p>
+          <div>${renderNameBadges(invs, 'bg-slate-200 text-slate-800')}</div>
+        </div>
+      `;
+
+      const modal = document.getElementById('invitations-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeInvitationsModal() {
+      document.getElementById('invitations-modal').classList.add('hidden');
+      document.getElementById('invitations-modal').classList.remove('flex');
+    }
+
+    function exportInitiativeInvitationsExcel() {
+      if (!activeInvitationsModalInitId || typeof XLSX === 'undefined') return;
+      const init = initiatives.find(x => x.id === activeInvitationsModalInitId);
+      if (!init) return;
+      const invs = init.invitations || [];
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(invs.map(v => ({
+        'المبادرة': init.title,
+        'البرنامج': init.program || '',
+        'اسم المتطوع': v.name,
+        'البريد الإلكتروني': v.email,
+        'المحافظة': v.gov || '',
+        'حالة الاستجابة': v.status === 'accepted' ? 'مستجيب للمشاركة' : (v.status === 'declined' ? 'لم يستجب (اعتذر)' : 'لم يقم بالرد'),
+        'تاريخ الرد': v.respondedAt || '-'
+      })));
+      XLSX.utils.book_append_sheet(wb, ws, 'استجابات_المبادرة');
+      XLSX.writeFile(wb, `استجابات_مبادرة_${init.title.substring(0, 25)}.xlsx`);
+    }
+
     function toggleCommitmentDays() {
       const val = document.getElementById('m-commitment').value;
       const box = document.getElementById('m-commitment-days-box');
@@ -2534,15 +2981,16 @@
       else box.classList.add('hidden');
     }
 
-    function addRoleRow(title = '', level = 'volunteer') {
+    function addRoleRow(title = '', level = 'volunteer', unit = '') {
       const container = document.getElementById('roles-inputs-container');
       const div = document.createElement('div');
-      div.className = 'flex items-center gap-2 role-row';
+      div.className = 'grid sm:grid-cols-12 gap-2 items-center role-row bg-white p-2 rounded-xl border border-teal-100';
       const optionsHtml = ORG_LEVELS.map(l => `<option value="${l.key}" ${level === l.key ? 'selected' : ''}>${l.label}</option>`).join('');
       div.innerHTML = `
-        <input type="text" class="role-title flex-1 border bg-white rounded-lg px-3 py-1.5 text-xs" placeholder="المسمى الوظيفي أو المهمة..." value="${title}" required />
-        <select class="role-level border bg-white rounded-lg px-2 py-1.5 text-xs">${optionsHtml}</select>
-        <button type="button" onclick="this.parentElement.remove()" class="text-rose-600 font-bold px-2 hover:bg-rose-50 rounded">✕</button>
+        <input type="text" class="role-title sm:col-span-4 border bg-slate-50 rounded-lg px-2.5 py-1.5 text-xs" placeholder="المسمى الوظيفي..." value="${title}" required />
+        <select class="role-level sm:col-span-4 border bg-slate-50 rounded-lg px-2 py-1.5 text-xs">${optionsHtml}</select>
+        <input type="text" class="role-unit sm:col-span-3 border bg-slate-50 rounded-lg px-2.5 py-1.5 text-xs" placeholder="القسم / البرنامج / المكتب" value="${unit || ''}" />
+        <button type="button" onclick="this.parentElement.remove()" class="sm:col-span-1 text-rose-600 font-bold text-center hover:bg-rose-50 rounded py-1">✕</button>
       `;
       container.appendChild(div);
     }
@@ -2575,9 +3023,9 @@
       const container = document.getElementById('roles-inputs-container');
       container.innerHTML = '';
       if (m.roles && m.roles.length) {
-        m.roles.forEach(r => addRoleRow(r.title, r.level));
+        m.roles.forEach(r => addRoleRow(r.title, r.level, r.unit || ''));
       } else {
-        addRoleRow('', 'volunteer');
+        addRoleRow('', 'volunteer', '');
       }
     }
 
@@ -2601,7 +3049,7 @@
         document.getElementById('m-id').value = '';
         populateCountriesDropdown('m-country', 'm-gov', 'سوريا', 'إدلب');
         toggleCommitmentDays();
-        addRoleRow('', 'volunteer');
+        addRoleRow('', 'volunteer', '');
       }
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -2619,7 +3067,8 @@
       const roleRows = document.querySelectorAll('#roles-inputs-container .role-row');
       const roles = Array.from(roleRows).map(row => ({
         title: row.querySelector('.role-title').value.trim(),
-        level: row.querySelector('.role-level').value
+        level: row.querySelector('.role-level').value,
+        unit: row.querySelector('.role-unit').value.trim()
       })).filter(r => r.title);
 
       if (roles.length === 0) { alert('يرجى إضافة مهمة واحدة على الأقل.'); return; }
@@ -2687,34 +3136,56 @@
     function saveInitiative(e) {
       e.preventDefault();
       if (!canEditData()) return;
-      const newInit = {
-        id: 'i_' + Date.now(),
-        title: document.getElementById('i-title').value.trim(),
-        lead: document.getElementById('i-lead').value.trim(),
-        location: document.getElementById('i-location').value.trim(),
-        volunteers: Number(document.getElementById('i-volunteers').value || 0),
-        hours: Number(document.getElementById('i-hours').value || 0),
-        partners: document.getElementById('i-partners').value.trim(),
-        desc: document.getElementById('i-desc').value.trim()
-      };
 
       const allChecked = document.getElementById('init-target-all').checked;
       const targetLevels = allChecked
         ? ['all']
         : Array.from(document.querySelectorAll('input[name="init-target-level"]:checked')).map(c => c.value);
       const sameGovOnly = document.getElementById('init-same-gov-only').checked;
+      const initLoc = document.getElementById('i-location').value.trim();
+
+      const invitedList = [];
+      const seenEmails = new Set();
+      members.forEach(m => {
+        const em = (m.email || '').toLowerCase().trim();
+        if (!em || seenEmails.has(em)) return;
+        if (sameGovOnly && initLoc && !initLoc.includes(m.gov)) return;
+        const mLevels = (m.roles && m.roles.length) ? m.roles.map(r => r.level) : ['volunteer'];
+        const matched = targetLevels.includes('all') || mLevels.some(lvl => targetLevels.includes(lvl));
+        if (matched) {
+          seenEmails.add(em);
+          invitedList.push({
+            email: em,
+            name: m.name,
+            gov: m.gov,
+            status: 'pending',
+            invitedAt: new Date().toISOString().split('T')[0]
+          });
+        }
+      });
+
+      const newInit = {
+        id: 'i_' + Date.now(),
+        title: document.getElementById('i-title').value.trim(),
+        program: document.getElementById('i-program').value.trim(),
+        lead: document.getElementById('i-lead').value.trim(),
+        location: initLoc,
+        volunteers: Number(document.getElementById('i-volunteers').value || 0),
+        hours: Number(document.getElementById('i-hours').value || 0),
+        partners: document.getElementById('i-partners').value.trim(),
+        desc: document.getElementById('i-desc').value.trim(),
+        invitations: invitedList
+      };
 
       initiatives.unshift(newInit);
       saveData({
         notifyInitiative: {
-          initiative: newInit,
-          targetLevels: targetLevels,
-          sameGovOnly: sameGovOnly
+          initiative: newInit
         }
       });
       closeInitiativeModal();
       e.target.reset();
-      alert("تم حفظ المبادرة الجديدة وإرسال رسائل الدعوة بالبريد الإلكتروني إلى الفئات المختارة من المتطوعين.");
+      alert(`تم حفظ المبادرة وإرسال الدعوة إلى (${invitedList.length}) متطوع عبر البريد الإلكتروني وإشعارات المنصة.`);
     }
 
     function deleteInitiative(id) {
@@ -2775,29 +3246,10 @@
 
     function printCertificate(memberId) {
       const m = members.find(x => x.id === memberId);
-      const savedLogo = localStorage.getItem('ghayth_logo_v2');
-      const logoTag = savedLogo ? `<img src="${savedLogo}" style="height:80px; margin:0 auto 10px;" />` : '';
-      const rolesText = (m.roles && m.roles.length) ? m.roles.map(r => r.title).join('، ') : 'متطوع معتمد';
+      if (!m) return;
       const printArea = document.getElementById('print-area');
       printArea.classList.remove('hidden');
-      printArea.innerHTML = `
-        <div style="border: 8px double #0F766E; padding: 40px; text-align: center; font-family: 'Cairo', sans-serif; direction: rtl;">
-          ${logoTag}
-          <h1 style="color: #0B4F4A; font-size: 26px; margin: 0;">${settings.orgName}</h1>
-          <p style="color: #64748B; font-size: 13px; margin: 4px 0 25px;">${settings.subtitle}</p>
-          <h2 style="background: #FEF3C7; color: #92400E; display: inline-block; padding: 8px 30px; border-radius: 30px; font-size: 22px;">شهادة شكر وتقدير تطوعية</h2>
-          <p style="font-size: 16px; margin-top: 25px;">تتقدم إدارة <strong>${settings.orgName}</strong> بجزيل الشكر والتقدير إلى:</p>
-          <h3 style="font-size: 28px; color: #0F766E; margin: 12px 0;">${m.name}</h3>
-          <p style="font-size: 15px; max-width: 600px; margin: 0 auto; line-height: 1.8;">
-            وذلك تقديراً لجهوده/ها المتميزة وعطائه/ها الإنساني بصفة: <strong>${rolesText}</strong>،
-            وإتمام <strong>(${m.hours} ساعة تطوعية)</strong> ضمن مبادرات الجمعية في محافظة <strong>${m.gov}</strong>.
-          </p>
-          <div style="display: flex; justify-content: space-around; margin-top: 50px; font-size: 14px;">
-            <div><strong>رئيس مجلس الإدارة</strong><br/>أ. فاطمة الآمنة</div>
-            <div><strong>المدير العام للجمعية</strong><br/>أ. محمد أنور علي العلي</div>
-          </div>
-        </div>
-      `;
+      printArea.innerHTML = buildCertificateHTML(m, false);
       window.print();
       printArea.classList.add('hidden');
     }
@@ -2847,7 +3299,6 @@
     updateAllViews();
     initGoogleAuth();
     syncFromCloud().then(() => {
-      // إذا فُتح الموقع من رابط مبادرة في الإيميل (?initiative=...)، ينتقل مباشرة لصفحة المبادرات
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('initiative')) {
         switchTab('initiatives');
