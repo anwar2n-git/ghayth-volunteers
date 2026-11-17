@@ -48,42 +48,43 @@
 
   <!-- الشريط العلوي والترويسة الرسمية -->
   <header class="bg-gradient-to-l from-ghayth-dark via-ghayth-teal to-teal-700 text-white shadow-lg no-print">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <div class="relative group">
-          <div id="logo-container" class="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur border-2 border-white/40 flex items-center justify-center overflow-hidden shadow-inner">
+    <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-wrap items-start justify-between gap-4">
+      <!-- الجانب الأيمن: الشعار واسم الجمعية -->
+      <div class="flex items-center gap-3.5">
+        <div class="relative group shrink-0">
+          <div id="logo-container" class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur border-2 border-white/40 flex items-center justify-center overflow-hidden shadow-inner">
             <img id="org-logo-img" src="" alt="شعار الجمعية" class="hidden w-full h-full object-contain p-1 bg-white" />
-            <svg id="org-logo-placeholder" class="w-9 h-9 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg id="org-logo-placeholder" class="w-8 h-8 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 17.657l-.707.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
-          <label for="logo-upload" class="edit-only hidden cursor-pointer mt-1 block text-[11px] text-center text-teal-100 hover:text-amber-300 underline">
+          <label for="logo-upload" class="edit-only hidden cursor-pointer mt-1 block text-[10px] text-center text-teal-100 hover:text-amber-300 underline">
             تغيير الشعار
           </label>
           <input type="file" id="logo-upload" accept="image/*" class="hidden" onchange="handleLogoUpload(event)" />
         </div>
         <div>
           <div class="flex items-center gap-2 flex-wrap">
-            <h1 id="header-org-name" class="text-xl md:text-2xl font-extrabold tracking-tight">جمعية غيث لأجل الإنسانية</h1>
-            <span id="header-org-en" class="text-xs bg-amber-500/90 text-slate-950 font-bold px-2.5 py-0.5 rounded-full">Ghayth for Humanity</span>
-            <span id="sync-badge" class="text-[11px] bg-white/20 px-2.5 py-0.5 rounded-full font-bold">⏳ جاري الاتصال بقاعدة البيانات...</span>
+            <h1 id="header-org-name" class="text-lg md:text-2xl font-extrabold tracking-tight">جمعية غيث لأجل الإنسانية</h1>
+            <span id="header-org-en" class="text-[11px] bg-amber-500/90 text-slate-950 font-bold px-2.5 py-0.5 rounded-full">Ghayth for Humanity</span>
+            <span id="sync-badge" class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">⏳ جاري الاتصال...</span>
           </div>
-          <p id="header-org-subtitle" class="text-xs md:text-sm text-teal-100 mt-1">
+          <p id="header-org-subtitle" class="text-xs text-teal-100 mt-1">
             مرخصة بالقرار رقم 2993 تاريخ 03/08/2025 — وزارة الشؤون الاجتماعية والعمل
           </p>
-          <p id="header-org-govs" class="text-xs text-teal-200 mt-0.5">نطاق العمل: كافة المحافظات السورية (14 محافظة)</p>
+          <p id="header-org-govs" class="text-[11px] text-teal-200 mt-0.5">نطاق العمل: كافة المحافظات السورية (14 محافظة)</p>
         </div>
       </div>
 
-      <!-- أزرار التحكم والإشعارات وتسجيل الدخول -->
-      <div class="flex flex-wrap items-center gap-2">
+      <!-- الزاوية اليسرى العليا: الإشعارات + أيقونة التحديث + تسجيل الدخول + قائمة الثلاث نقاط (⋮) -->
+      <div class="mr-auto flex items-center gap-2 self-start">
+        <!-- 1. أيقونة الإشعارات في اليسار من الأعلى -->
         <div id="notifications-wrapper" class="logged-in-only hidden relative">
-          <button onclick="toggleNotificationsMenu()" class="relative bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2.5 rounded-xl transition flex items-center gap-1.5" title="الإشعارات والدعوات">
-            <span class="text-base">🔔</span>
-            <span class="text-xs font-bold hidden sm:inline">الإشعارات</span>
-            <span id="notif-bell-count" class="hidden bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">0</span>
+          <button onclick="toggleNotificationsMenu()" class="relative bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2 rounded-xl transition flex items-center justify-center" title="الإشعارات والدعوات">
+            <span class="text-base leading-none">🔔</span>
+            <span id="notif-bell-count" class="hidden -top-1.5 -right-1.5 absolute bg-rose-500 text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full shadow">0</span>
           </button>
-          <div id="notifications-dropdown" class="hidden fixed inset-x-3 top-24 sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-80 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
+          <div id="notifications-dropdown" class="hidden fixed inset-x-3 top-20 sm:absolute sm:inset-x-auto sm:left-0 sm:top-auto sm:mt-2 sm:w-80 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
             <div class="bg-slate-50 px-4 py-2.5 border-b flex justify-between items-center">
               <span class="text-xs font-extrabold text-ghayth-dark">🔔 الإشعارات والدعوات الواردة</span>
               <button onclick="toggleNotificationsMenu()" class="text-slate-400 hover:text-slate-700 text-xs font-bold">✕</button>
@@ -92,39 +93,52 @@
           </div>
         </div>
 
-        <div id="auth-guest-box" class="flex items-center gap-2">
+        <!-- 2. رمز التحديث اليدوي فقط (بدون كلمة تحديث) -->
+        <button onclick="syncFromCloud(true)" title="تحديث البيانات من السحابة" class="edit-only hidden bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2 rounded-xl shadow-xs flex items-center justify-center transition">
+          <span class="text-base leading-none">🔄</span>
+        </button>
+
+        <!-- 3. تسجيل الدخول في الزاوية اليسرى العليا -->
+        <div id="auth-guest-box" class="flex items-center">
           <div id="google-signin-btn"></div>
-          <button id="fallback-signin-btn" onclick="triggerGoogleSignIn()" class="bg-white hover:bg-slate-100 text-slate-900 text-xs md:text-sm font-extrabold px-3.5 py-2 rounded-xl shadow flex items-center gap-2 transition">
+          <button id="fallback-signin-btn" onclick="triggerGoogleSignIn()" class="bg-white hover:bg-slate-100 text-slate-900 text-xs font-extrabold px-3 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
             <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17Z"/>
               <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.29v3.14C3.26 21.3 7.31 24 12 24Z"/>
               <path fill="#FBBC05" d="M5.28 14.24c-.24-.72-.38-1.49-.38-2.24s.14-1.52.38-2.24V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.99-3.14Z"/>
               <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.99 3.14c.95-2.85 3.6-4.96 6.72-4.96Z"/>
             </svg>
-            <span>دخول المتطوعين والإدارة</span>
+            <span>دخول</span>
           </button>
         </div>
 
-        <div id="auth-user-box" class="hidden items-center gap-2 bg-white/15 border border-white/30 px-3 py-1.5 rounded-xl">
-          <img id="user-avatar" src="" alt="" class="w-7 h-7 rounded-full border border-white/50 hidden" />
-          <div class="text-right leading-tight">
-            <p id="user-display-name" class="text-xs font-extrabold text-white"></p>
-            <p id="user-role-badge" class="text-[10px] font-bold text-amber-300"></p>
+        <div id="auth-user-box" class="hidden items-center gap-2 bg-white/15 border border-white/30 px-2.5 py-1.5 rounded-xl">
+          <img id="user-avatar" src="" alt="" class="w-6 h-6 rounded-full border border-white/50 hidden" />
+          <div class="text-right leading-tight max-w-[110px] sm:max-w-[150px] truncate">
+            <p id="user-display-name" class="text-xs font-extrabold text-white truncate"></p>
+            <p id="user-role-badge" class="text-[9px] font-bold text-amber-300 truncate"></p>
           </div>
-          <button onclick="logoutUser()" title="تسجيل الخروج" class="mr-1 text-xs bg-rose-600/80 hover:bg-rose-600 text-white px-2 py-1 rounded-lg font-bold transition">
+          <button onclick="logoutUser()" title="تسجيل الخروج" class="text-[11px] bg-rose-600/85 hover:bg-rose-600 text-white px-2 py-1 rounded-lg font-bold transition">
             خروج
           </button>
         </div>
 
-        <button onclick="syncFromCloud(true)" class="edit-only hidden bg-sky-600 hover:bg-sky-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
-          <span>🔄</span> تحديث
-        </button>
-        <a href="https://docs.google.com/spreadsheets/d/1c_AJlurGTb2FXFfnyjQzNj3gtuBd1brF2O5dLJGyS1c/edit?gid=1001#gid=1001" target="_blank" class="edit-only hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
-          <span>📊</span> ملف قاعدة البيانات
-        </a>
-        <button onclick="printReport('all')" class="edit-only hidden bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs md:text-sm font-bold px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition">
-          <span>🖨️</span> طباعة
-        </button>
+        <!-- 4. قائمة الثلاث نقاط للخيارات الإضافية (الطباعة + قاعدة البيانات) -->
+        <div class="edit-only hidden relative">
+          <button onclick="toggleMoreOptionsMenu()" title="خيارات إضافية" class="bg-white/15 hover:bg-white/25 border border-white/30 text-white w-9 h-9 rounded-xl font-extrabold text-lg flex items-center justify-center transition">
+            ⋮
+          </button>
+          <div id="more-options-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden text-xs font-bold">
+            <a href="https://docs.google.com/spreadsheets/d/1c_AJlurGTb2FXFfnyjQzNj3gtuBd1brF2O5dLJGyS1c/edit?gid=1001#gid=1001" target="_blank" onclick="toggleMoreOptionsMenu()" class="flex items-center gap-2.5 px-4 py-3 hover:bg-emerald-50 text-emerald-900 border-b border-slate-100 transition">
+              <span class="text-base">📊</span>
+              <span>ملف قاعدة البيانات (Google Sheets)</span>
+            </a>
+            <button onclick="printReport('all'); toggleMoreOptionsMenu();" class="w-full text-right flex items-center gap-2.5 px-4 py-3 hover:bg-slate-100 text-slate-800 transition">
+              <span class="text-base">🖨️</span>
+              <span>طباعة التقرير التنظيمي العام</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -226,14 +240,14 @@
         </div>
       </div>
 
-      <!-- لوحة التحليل الذكي لأوقات وأيام توفر المتطوعين -->
+      <!-- لوحة التحليل الذكي لأيام وأوقات التطوع والمحافظات (تفاعلية بالكامل) -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div>
             <h2 class="text-lg font-extrabold text-ghayth-dark flex items-center gap-2">
-              <span>📊</span> التحليل الذكي لأيام وأوقات توفر المتطوعين
+              <span>📊</span> التحليل الذكي لأيام وأوقات توفر المتطوعين والمحافظات
             </h2>
-            <p class="text-xs text-slate-500">مؤشر تفاعلي يوضح ذروة توفر الكادر والمتطوعين حسب الأيام والفترات الزمنية لتسهيل جدولة الأنشطة</p>
+            <p class="text-xs text-slate-500">انقر على أي يوم أو فترة زمنية أو محافظة لتصفية أسماء المتطوعين ومراسلتهم مباشرة</p>
           </div>
           <span id="peak-availability-badge" class="text-xs bg-teal-50 text-ghayth-dark border border-teal-200 font-extrabold px-3 py-1.5 rounded-full"></span>
         </div>
@@ -287,7 +301,7 @@
       </div>
     </section>
 
-    <!-- 2. المتطوعين + الخريطة التفاعلية -->
+    <!-- 2. المتطوعين + الخريطة التفاعلية المترابطة مع الفرز -->
     <section id="view-volunteers" class="hidden space-y-5">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -305,13 +319,14 @@
             <h3 class="text-base font-extrabold text-ghayth-dark flex items-center gap-2">
               <span>🗺️</span> خريطة الانتشار الجغرافي التفاعلية للمتطوعين
             </h3>
-            <p class="text-xs text-slate-500">انقر على أي علامة لعرض اسم المتطوع، موقعه، مهامه التنظيمية، وساعاته التطوعية</p>
+            <p class="text-xs text-slate-500">تتفاعل الخريطة تلقائياً مع الفرز والبحث بالأسفل لعرض مواقع المتطوعين المطابقين فقط</p>
           </div>
           <span id="map-pins-count" class="text-xs bg-sky-50 text-sky-800 border border-sky-200 font-bold px-3 py-1 rounded-full"></span>
         </div>
         <div id="volunteers-map" class="w-full h-80 rounded-xl border border-slate-200 z-10"></div>
       </div>
 
+      <!-- شريط البحث والفرز (مرتبط بالخريطة وبالقائمة) -->
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 grid sm:grid-cols-3 gap-3">
         <input type="text" id="search-member" oninput="renderMembers()" placeholder="🔍 ابحث بالاسم، المهمة، المهارة، أو المبادرة..." class="border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-ghayth-teal" />
         <select id="filter-gov" onchange="renderMembers()" class="border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-ghayth-teal">
@@ -476,6 +491,39 @@
   </main>
 
   <div id="print-area" class="hidden"></div>
+
+  <!-- نافذة حوار إرسال بريد إلكتروني للمتطوعين المحددين -->
+  <div id="bulk-email-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+      <div class="flex justify-between items-center border-b pb-3 mb-4">
+        <h3 class="text-lg font-extrabold text-ghayth-dark">✉️ إرسال رسالة بريد إلكتروني للمحددين</h3>
+        <button onclick="closeBulkEmailModal()" class="text-slate-400 hover:text-slate-700 text-xl font-bold">✕</button>
+      </div>
+      <form onsubmit="sendBulkEmailToSelected(event)" class="space-y-4 text-sm">
+        <div class="p-3 rounded-xl bg-teal-50/70 border border-teal-200 text-xs">
+          <p class="font-extrabold text-ghayth-dark mb-1" id="bulk-email-target-label">المستلمون المحددون:</p>
+          <div id="bulk-email-recipients-list" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto"></div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-xs mb-1">عنوان الرسالة (الموضوع) *</label>
+          <input type="text" id="bulk-email-subject" required placeholder="مثال: تنسيق نشاط ميداني / دعوة لاجتماع تطوعي" class="w-full border rounded-xl px-3 py-2" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-xs mb-1">نص الرسالة *</label>
+          <textarea id="bulk-email-body" rows="4" required placeholder="اكتب نص الرسالة الموجهة للمتطوعين..." class="w-full border rounded-xl px-3 py-2"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="closeBulkEmailModal()" class="px-4 py-2 rounded-xl border font-bold text-slate-600">إلغاء</button>
+          <button type="submit" id="bulk-email-submit-btn" class="px-5 py-2 rounded-xl bg-ghayth-teal text-white font-bold hover:bg-ghayth-dark shadow transition">
+            📤 إرسال البريد الآن
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- نافذة عرض تفاصيل المدعوين واستجاباتهم للمبادرة وتصديرها Excel -->
   <div id="invitations-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
@@ -952,6 +1000,8 @@
     let markersLayer = null;
     let tempCapturedCoords = { lat: null, lng: null };
     let activeInvitationsModalInitId = null;
+    let selectedAvailabilityFilter = { type: null, value: null };
+    let currentFilteredAvailabilityMembers = [];
 
     function openSidebarMenu() {
       const drawer = document.getElementById('sidebar-drawer');
@@ -969,6 +1019,11 @@
       drawer.classList.add('translate-x-full');
       backdrop.classList.add('hidden');
       setTimeout(() => { drawer.style.display = 'none'; }, 280);
+    }
+
+    function toggleMoreOptionsMenu() {
+      const dd = document.getElementById('more-options-dropdown');
+      if (dd) dd.classList.toggle('hidden');
     }
 
     function formatPhoneForWhatsApp(phone) {
@@ -1242,9 +1297,9 @@
         const perm = getUserPerm();
         const memberRec = getCurrentMemberRecord();
         let roleText = '🙋‍♂️ بوابة المتطوع';
-        if (perm && perm.role === 'admin') roleText = '👑 مدير نظام (صلاحية كاملة)';
-        else if (perm) roleText = '🛡️ مشرف مهام معتمد';
-        else if (memberRec) roleText = '✅ متطوع معتمد في الجمعية';
+        if (perm && perm.role === 'admin') roleText = '👑 مدير نظام';
+        else if (perm) roleText = '🛡️ مشرف معتمد';
+        else if (memberRec) roleText = '✅ متطوع معتمد';
         document.getElementById('user-role-badge').textContent = roleText;
 
         const avatar = document.getElementById('user-avatar');
@@ -1276,7 +1331,7 @@
         });
         google.accounts.id.renderButton(
           document.getElementById("google-signin-btn"),
-          { theme: "outline", size: "medium", text: "signin_with", shape: "pill", locale: "ar" }
+          { theme: "outline", size: "medium", text: "signin", shape: "pill", locale: "ar" }
         );
         googleAuthReady = true;
         const fallbackBtn = document.getElementById("fallback-signin-btn");
@@ -1391,7 +1446,7 @@
     function setSyncStatus(text, colorClass) {
       const badge = document.getElementById('sync-badge');
       badge.textContent = text;
-      badge.className = `text-[11px] px-2.5 py-0.5 rounded-full font-bold ${colorClass}`;
+      badge.className = `text-[10px] px-2 py-0.5 rounded-full font-bold ${colorClass}`;
     }
 
     async function syncFromCloud(manual = false) {
@@ -1435,7 +1490,7 @@
       if (!canEditData() && !canReviewRequests() && !isAdmin()) return;
       if (!currentUser) return;
 
-      setSyncStatus("⏳ جاري الحفظ في Google Sheets...", "bg-amber-500 text-slate-950");
+      setSyncStatus("⏳ جاري الحفظ...", "bg-amber-500 text-slate-950");
       try {
         await fetch(CLOUD_API_URL, {
           method: 'POST',
@@ -1471,9 +1526,7 @@
       pushToCloud(extraPayload);
     }
 
-   
-    let selectedAvailabilityFilter = { type: null, value: null };
-
+    // الفلترة التفاعلية للأيام والأوقات والمحافظات في لوحة القيادة الرئيسية
     function toggleAvailabilityFilter(type, value) {
       if (selectedAvailabilityFilter.type === type && selectedAvailabilityFilter.value === value) {
         selectedAvailabilityFilter = { type: null, value: null };
@@ -1481,6 +1534,81 @@
         selectedAvailabilityFilter = { type, value };
       }
       renderAvailabilityAnalytics();
+    }
+
+    function openBulkEmailModal() {
+      if (!canEditData()) return;
+      const validRecipients = currentFilteredAvailabilityMembers.filter(m => (m.email || '').trim() !== '');
+      if (validRecipients.length === 0) {
+        alert("لا يوجد بريد إلكتروني مسجل للمتطوعين في هذه القائمة.");
+        return;
+      }
+
+      let filterTitle = "جميع المتطوعين";
+      if (selectedAvailabilityFilter.type === 'day') filterTitle = `المتطوعون المتاحون يوم (${selectedAvailabilityFilter.value})`;
+      else if (selectedAvailabilityFilter.type === 'time') filterTitle = `المتطوعون المتاحون في فترة (${selectedAvailabilityFilter.value})`;
+      else if (selectedAvailabilityFilter.type === 'gov') filterTitle = `المتطوعون في محافظة (${selectedAvailabilityFilter.value})`;
+
+      document.getElementById('bulk-email-target-label').textContent = `${filterTitle} — عدد المستلمين ببريد موثق (${validRecipients.length}):`;
+      document.getElementById('bulk-email-recipients-list').innerHTML = validRecipients.map(m =>
+        `<span class="bg-white border border-teal-300 text-ghayth-dark font-bold px-2 py-0.5 rounded-md">${m.name} (${m.email})</span>`
+      ).join('');
+
+      document.getElementById('bulk-email-subject').value = '';
+      document.getElementById('bulk-email-body').value = `السلام عليكم ورحمة الله وبركاته،\n\nتحية طيبة من ${settings.orgName}،\n\n`;
+
+      const modal = document.getElementById('bulk-email-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeBulkEmailModal() {
+      document.getElementById('bulk-email-modal').classList.add('hidden');
+      document.getElementById('bulk-email-modal').classList.remove('flex');
+    }
+
+    async function sendBulkEmailToSelected(e) {
+      e.preventDefault();
+      if (!canEditData() || !currentUser) return;
+
+      const recipients = currentFilteredAvailabilityMembers
+        .map(m => (m.email || '').toLowerCase().trim())
+        .filter(Boolean);
+
+      if (recipients.length === 0) return;
+
+      const subject = document.getElementById('bulk-email-subject').value.trim();
+      const message = document.getElementById('bulk-email-body').value.trim();
+      const btn = document.getElementById('bulk-email-submit-btn');
+      btn.disabled = true;
+      btn.textContent = "⏳ جاري الإرسال...";
+
+      setSyncStatus("⏳ جاري إرسال البريد...", "bg-amber-500 text-slate-950");
+      try {
+        await fetch(CLOUD_API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          redirect: 'follow',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'send_bulk_email',
+            idToken: isTokenExpired(currentUser.idToken) ? "" : currentUser.idToken,
+            userEmail: currentUser.email,
+            sessionKey: currentUser.sessionKey,
+            recipients: recipients,
+            subject: subject,
+            message: message
+          })
+        });
+        setSyncStatus("✅ تم إرسال البريد", "bg-emerald-500 text-white");
+        closeBulkEmailModal();
+        alert(`تم إرسال الرسالة بنجاح إلى (${recipients.length}) متطوع عبر البريد الإلكتروني.`);
+      } catch (err) {
+        alert("تعذر إرسال البريد الإلكتروني، يرجى المحاولة مرة أخرى.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "📤 إرسال البريد الآن";
+      }
     }
 
     function renderAvailabilityAnalytics() {
@@ -1492,10 +1620,13 @@
       DAYS_LIST.forEach(d => dayCounts[d] = 0);
       const timeCounts = {};
       TIMES_LIST.forEach(t => timeCounts[t.label] = 0);
+      const govCounts = {};
+      COUNTRIES_DATA["سوريا"].forEach(g => govCounts[g] = 0);
 
       members.forEach(m => {
         (m.prefDays || []).forEach(d => { if (dayCounts[d] !== undefined) dayCounts[d]++; });
         (m.prefTimes || []).forEach(t => { if (timeCounts[t] !== undefined) timeCounts[t]++; });
+        if (m.gov) govCounts[m.gov] = (govCounts[m.gov] || 0) + 1;
       });
 
       const maxDayVal = Math.max(1, ...Object.values(dayCounts));
@@ -1546,6 +1677,18 @@
         `;
       }).join('');
 
+      // بطاقات المحافظات التفاعلية تحت أوقات التطوع
+      const govsHtml = Object.entries(govCounts).map(([govName, count]) => {
+        const isSelected = selectedAvailabilityFilter.type === 'gov' && selectedAvailabilityFilter.value === govName;
+        return `
+          <button type="button" onclick="toggleAvailabilityFilter('gov', '${govName}')"
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 ${isSelected ? 'bg-sky-600 text-white border-sky-700 shadow-sm' : (count > 0 ? 'bg-white text-slate-800 border-slate-200 hover:border-sky-400' : 'bg-slate-50 text-slate-400 border-slate-100')}">
+            <span>📍 ${govName}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-white text-sky-800' : 'bg-sky-50 text-sky-800'}">${count}</span>
+          </button>
+        `;
+      }).join('');
+
       let filteredMembers = members;
       let filterLabel = "جميع المتطوعين المسجلين";
 
@@ -1555,7 +1698,12 @@
       } else if (selectedAvailabilityFilter.type === 'time') {
         filteredMembers = members.filter(m => (m.prefTimes || []).includes(selectedAvailabilityFilter.value));
         filterLabel = `المتطوعون المتاحون في فترة (${selectedAvailabilityFilter.value})`;
+      } else if (selectedAvailabilityFilter.type === 'gov') {
+        filteredMembers = members.filter(m => m.gov === selectedAvailabilityFilter.value);
+        filterLabel = `المتطوعون في محافظة (${selectedAvailabilityFilter.value})`;
       }
+
+      currentFilteredAvailabilityMembers = filteredMembers;
 
       const namesListHtml = filteredMembers.length
         ? filteredMembers.map(m => `
@@ -1564,35 +1712,49 @@
               <span>${m.name}</span>
             </span>
           `).join('')
-        : `<span class="text-xs text-slate-400">لا يوجد متطوعون مسجلون في هذا التوقيت حالياً.</span>`;
+        : `<span class="text-xs text-slate-400">لا يوجد متطوعون مطابقون لهذا الاختيار حالياً.</span>`;
+
+      const emailBtnHtml = (canEditData() && filteredMembers.length > 0)
+        ? `<button onclick="openBulkEmailModal()" class="text-[11px] bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold px-3 py-1.5 rounded-lg shadow transition">✉️ إرسال إيميل للمحددين</button>`
+        : '';
 
       const resetBtnHtml = selectedAvailabilityFilter.type
-        ? `<button onclick="toggleAvailabilityFilter(null, null)" class="text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-2.5 py-1 rounded-lg transition">✕ عرض الكل</button>`
-        : `<span class="text-[11px] text-slate-400">💡 انقر على أي يوم أو فترة زمنية أعلاه لتصفية الأسماء</span>`;
+        ? `<button onclick="toggleAvailabilityFilter(null, null)" class="text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-2.5 py-1.5 rounded-lg transition">✕ عرض الكل</button>`
+        : `<span class="text-[11px] text-slate-400 hidden sm:inline">💡 انقر على أي يوم أو فترة أو محافظة لتصفية الأسماء</span>`;
 
       container.innerHTML = `
         <div class="space-y-1.5">
-          <h3 class="text-xs font-extrabold text-slate-600 uppercase mb-2">📅 التوزيع حسب أيام الأسبوع المفضلة (انقر للتصفية)</h3>
+          <h3 class="text-xs font-extrabold text-slate-600 uppercase mb-2">📅 التوزيع حسب أيام الأسبوع المفضلة</h3>
           ${daysHtml}
         </div>
-        <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-slate-600 uppercase">⏰ التوزيع حسب الفترات الزمنية المفضلة (انقر للتصفية)</h3>
-          <div class="grid sm:grid-cols-2 gap-3">${timesHtml}</div>
+        <div class="space-y-4">
+          <div>
+            <h3 class="text-xs font-extrabold text-slate-600 uppercase mb-2.5">⏰ التوزيع حسب الفترات الزمنية المفضلة</h3>
+            <div class="grid sm:grid-cols-2 gap-3">${timesHtml}</div>
+          </div>
+          <div class="pt-3 border-t border-slate-100">
+            <h3 class="text-xs font-extrabold text-slate-600 uppercase mb-2.5">📍 التوزيع التفاعلي حسب المحافظات</h3>
+            <div class="flex flex-wrap gap-2">${govsHtml}</div>
+          </div>
         </div>
-        <div class="lg:col-span-2 mt-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+        <div class="lg:col-span-2 mt-1 p-4 rounded-2xl bg-slate-50 border border-slate-200">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <h4 class="text-xs font-extrabold text-ghayth-dark flex items-center gap-1.5">
               <span>👥</span>
               <span>${filterLabel} (${filteredMembers.length}):</span>
             </h4>
-            ${resetBtnHtml}
+            <div class="flex flex-wrap items-center gap-2">
+              ${emailBtnHtml}
+              ${resetBtnHtml}
+            </div>
           </div>
           <div class="flex flex-wrap gap-2">${namesListHtml}</div>
         </div>
       `;
     }
 
-    function renderVolunteersMap() {
+    // خريطة المتطوعين التفاعلية (تتفاعل تلقائياً مع الفرز والبحث)
+    function renderVolunteersMap(filteredList = null) {
       const mapEl = document.getElementById('volunteers-map');
       if (!mapEl || typeof L === 'undefined') return;
 
@@ -1605,9 +1767,10 @@
       }
 
       markersLayer.clearLayers();
-      let pinnedCount = 0;
+      const listToMap = filteredList !== null ? filteredList : members;
+      const bounds = [];
 
-      members.forEach((m, index) => {
+      listToMap.forEach((m, index) => {
         let lat = parseFloat(m.lat);
         let lng = parseFloat(m.lng);
         if (isNaN(lat) || isNaN(lng)) {
@@ -1615,7 +1778,7 @@
           lat = base[0] + ((index % 5) * 0.008 - 0.015);
           lng = base[1] + (((index + 2) % 5) * 0.008 - 0.015);
         }
-        pinnedCount++;
+        bounds.push([lat, lng]);
         const rolesStr = (m.roles && m.roles.length) ? m.roles.map(r => r.title).join(' + ') : 'متطوع معتمد';
         const marker = L.marker([lat, lng]).addTo(markersLayer);
         marker.bindPopup(`
@@ -1629,8 +1792,16 @@
       });
 
       const badge = document.getElementById('map-pins-count');
-      if (badge) badge.textContent = `📍 ${pinnedCount} متطوع موثق على الخريطة`;
-      setTimeout(() => leafletMap.invalidateSize(), 250);
+      if (badge) badge.textContent = `📍 ${listToMap.length} متطوع ظاهر على الخريطة`;
+
+      setTimeout(() => {
+        leafletMap.invalidateSize();
+        if (bounds.length > 0) {
+          leafletMap.fitBounds(bounds, { padding: [35, 35], maxZoom: 11 });
+        } else {
+          leafletMap.setView([35.3, 36.8], 7);
+        }
+      }, 200);
     }
 
     function captureGPSLocation(targetPrefix) {
@@ -1808,7 +1979,6 @@
 
       if (!memberRec) {
         const latestJoin = myRequests.find(r => r.type === 'join');
-        // منع تكرار الطلب سواء كان قيد المراجعة أو مقبولاً مسبقاً
         const hasExistingJoin = latestJoin && (latestJoin.status === 'pending' || latestJoin.status === 'approved');
         container.innerHTML = `
           ${invitesSectionHtml}
@@ -2617,7 +2787,7 @@
       const indicator = document.getElementById('current-section-indicator');
       if (indicator) indicator.textContent = 'القسم الحالي: ' + (sectionNames[tabName] || '');
 
-      if (tabName === 'volunteers') renderVolunteersMap();
+      if (tabName === 'volunteers') renderMembers();
     }
 
     function getLevelInfo(levelKey) {
@@ -2663,6 +2833,9 @@
         const matchLevel = !level || (m.roles || []).some(r => r.level === level);
         return matchQ && matchGov && matchLevel;
       });
+
+      // تحديث الخريطة تلقائياً لتطابق نتائج الفرز والبحث
+      renderVolunteersMap(filtered);
 
       const grid = document.getElementById('members-grid');
       if (filtered.length === 0) {
@@ -3382,7 +3555,6 @@
       updateDashboard();
       renderAvailabilityAnalytics();
       renderMembers();
-      renderVolunteersMap();
       renderOrgChart();
       renderInitiatives();
       renderVolunteerPortal();
