@@ -49,7 +49,6 @@
   <!-- الشريط العلوي والترويسة الرسمية -->
   <header class="bg-gradient-to-l from-ghayth-dark via-ghayth-teal to-teal-700 text-white shadow-lg no-print">
     <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-wrap items-start justify-between gap-4">
-      <!-- الجانب الأيمن: الشعار واسم الجمعية -->
       <div class="flex items-center gap-3.5">
         <div class="relative group shrink-0">
           <div id="logo-container" class="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-white/15 backdrop-blur border-2 border-white/40 flex items-center justify-center overflow-hidden shadow-inner">
@@ -76,9 +75,7 @@
         </div>
       </div>
 
-      <!-- الزاوية اليسرى العليا: الإشعارات + أيقونة التحديث + تسجيل الدخول + قائمة الثلاث نقاط (⋮) -->
       <div class="mr-auto flex items-center gap-2 self-start">
-        <!-- 1. أيقونة الإشعارات في اليسار من الأعلى -->
         <div id="notifications-wrapper" class="logged-in-only hidden relative">
           <button onclick="toggleNotificationsMenu()" class="relative bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2 rounded-xl transition flex items-center justify-center" title="الإشعارات والدعوات">
             <span class="text-base leading-none">🔔</span>
@@ -93,12 +90,10 @@
           </div>
         </div>
 
-        <!-- 2. رمز التحديث اليدوي فقط (بدون كلمة تحديث) -->
         <button onclick="syncFromCloud(true)" title="تحديث البيانات من السحابة" class="edit-only hidden bg-white/15 hover:bg-white/25 border border-white/30 text-white p-2 rounded-xl shadow-xs flex items-center justify-center transition">
           <span class="text-base leading-none">🔄</span>
         </button>
 
-        <!-- 3. تسجيل الدخول في الزاوية اليسرى العليا -->
         <div id="auth-guest-box" class="flex items-center">
           <div id="google-signin-btn"></div>
           <button id="fallback-signin-btn" onclick="triggerGoogleSignIn()" class="bg-white hover:bg-slate-100 text-slate-900 text-xs font-extrabold px-3 py-2 rounded-xl shadow flex items-center gap-1.5 transition">
@@ -123,7 +118,6 @@
           </button>
         </div>
 
-        <!-- 4. قائمة الثلاث نقاط للخيارات الإضافية (الطباعة + قاعدة البيانات) -->
         <div class="edit-only hidden relative">
           <button onclick="toggleMoreOptionsMenu()" title="خيارات إضافية" class="bg-white/15 hover:bg-white/25 border border-white/30 text-white w-9 h-9 rounded-xl font-extrabold text-lg flex items-center justify-center transition">
             ⋮
@@ -165,7 +159,7 @@
     </nav>
   </header>
 
-  <!-- القائمة الجانبية المنسدلة (مخفية افتراضياً على كافة الشاشات) -->
+  <!-- القائمة الجانبية المنسدلة -->
   <div id="sidebar-backdrop" onclick="closeSidebarMenu()" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden z-40 no-print"></div>
   <aside id="sidebar-drawer" style="display: none;" class="fixed top-0 right-0 h-full w-72 max-w-[82vw] bg-white shadow-2xl border-l border-slate-200 transform translate-x-full transition-transform duration-300 z-50 flex-col justify-between no-print">
     <div>
@@ -240,14 +234,14 @@
         </div>
       </div>
 
-      <!-- لوحة التحليل الذكي لأيام وأوقات التطوع والمحافظات (تفاعلية بالكامل) -->
+      <!-- لوحة التحليل الذكي التفاعلية بالكامل (اللوحات الثلاث تتفاعل مع بعضها) -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div>
             <h2 class="text-lg font-extrabold text-ghayth-dark flex items-center gap-2">
               <span>📊</span> التحليل الذكي لأيام وأوقات توفر المتطوعين والمحافظات
             </h2>
-            <p class="text-xs text-slate-500">انقر على أي يوم أو فترة زمنية أو محافظة لتصفية أسماء المتطوعين ومراسلتهم مباشرة</p>
+            <p class="text-xs text-slate-500">انقر على أي يوم أو فترة زمنية أو محافظة لتتم الفلترة التفاعلية المشتركة مباشرة</p>
           </div>
           <span id="peak-availability-badge" class="text-xs bg-teal-50 text-ghayth-dark border border-teal-200 font-extrabold px-3 py-1.5 rounded-full"></span>
         </div>
@@ -326,7 +320,6 @@
         <div id="volunteers-map" class="w-full h-80 rounded-xl border border-slate-200 z-10"></div>
       </div>
 
-      <!-- شريط البحث والفرز (مرتبط بالخريطة وبالقائمة) -->
       <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 grid sm:grid-cols-3 gap-3">
         <input type="text" id="search-member" oninput="renderMembers()" placeholder="🔍 ابحث بالاسم، المهمة، المهارة، أو المبادرة..." class="border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-ghayth-teal" />
         <select id="filter-gov" onchange="renderMembers()" class="border border-slate-200 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-ghayth-teal">
@@ -525,7 +518,7 @@
     </div>
   </div>
 
-  <!-- نافذة عرض تفاصيل المدعوين واستجاباتهم للمبادرة وتصديرها Excel -->
+  <!-- نافذة عرض تفاصيل المدعوين والاستجابات للمبادرة وتصديرها Excel -->
   <div id="invitations-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
       <div class="flex flex-wrap justify-between items-center gap-2 border-b pb-3 mb-4">
@@ -1000,7 +993,9 @@
     let markersLayer = null;
     let tempCapturedCoords = { lat: null, lng: null };
     let activeInvitationsModalInitId = null;
-    let selectedAvailabilityFilter = { type: null, value: null };
+
+    // حالة الفلاتر التفاعلية المتعددة للوحات التحليل الذكي
+    let availabilityFilters = { day: null, time: null, gov: null, memberName: null };
     let currentFilteredAvailabilityMembers = [];
 
     function openSidebarMenu() {
@@ -1297,9 +1292,9 @@
         const perm = getUserPerm();
         const memberRec = getCurrentMemberRecord();
         let roleText = '🙋‍♂️ بوابة المتطوع';
-        if (perm && perm.role === 'admin') roleText = '👑 مدير نظام';
-        else if (perm) roleText = '🛡️ مشرف معتمد';
-        else if (memberRec) roleText = '✅ متطوع معتمد';
+        if (perm && perm.role === 'admin') roleText = '👑 مدير نظام (صلاحية كاملة)';
+        else if (perm) roleText = '🛡️ مشرف مهام معتمد';
+        else if (memberRec) roleText = '✅ متطوع معتمد في الجمعية';
         document.getElementById('user-role-badge').textContent = roleText;
 
         const avatar = document.getElementById('user-avatar');
@@ -1526,13 +1521,18 @@
       pushToCloud(extraPayload);
     }
 
-    // الفلترة التفاعلية للأيام والأوقات والمحافظات في لوحة القيادة الرئيسية
+    // تفاعل اللوحات الثلاث مع بعضها في لوحة التحليل الذكي
     function toggleAvailabilityFilter(type, value) {
-      if (selectedAvailabilityFilter.type === type && selectedAvailabilityFilter.value === value) {
-        selectedAvailabilityFilter = { type: null, value: null };
+      if (availabilityFilters[type] === value) {
+        availabilityFilters[type] = null;
       } else {
-        selectedAvailabilityFilter = { type, value };
+        availabilityFilters[type] = value;
       }
+      renderAvailabilityAnalytics();
+    }
+
+    function resetAvailabilityFilters() {
+      availabilityFilters = { day: null, time: null, gov: null, memberName: null };
       renderAvailabilityAnalytics();
     }
 
@@ -1544,12 +1544,13 @@
         return;
       }
 
-      let filterTitle = "جميع المتطوعين";
-      if (selectedAvailabilityFilter.type === 'day') filterTitle = `المتطوعون المتاحون يوم (${selectedAvailabilityFilter.value})`;
-      else if (selectedAvailabilityFilter.type === 'time') filterTitle = `المتطوعون المتاحون في فترة (${selectedAvailabilityFilter.value})`;
-      else if (selectedAvailabilityFilter.type === 'gov') filterTitle = `المتطوعون في محافظة (${selectedAvailabilityFilter.value})`;
+      let activeFiltersStr = [];
+      if (availabilityFilters.day) activeFiltersStr.push(`اليوم: ${availabilityFilters.day}`);
+      if (availabilityFilters.time) activeFiltersStr.push(`الفترة: ${availabilityFilters.time}`);
+      if (availabilityFilters.gov) activeFiltersStr.push(`المحافظة: ${availabilityFilters.gov}`);
+      const filterTitle = activeFiltersStr.length ? activeFiltersStr.join(' • ') : "جميع المتطوعين";
 
-      document.getElementById('bulk-email-target-label').textContent = `${filterTitle} — عدد المستلمين ببريد موثق (${validRecipients.length}):`;
+      document.getElementById('bulk-email-target-label').textContent = `الفلتر الحالي (${filterTitle}) — المستلمون ببريد موثق (${validRecipients.length}):`;
       document.getElementById('bulk-email-recipients-list').innerHTML = validRecipients.map(m =>
         `<span class="bg-white border border-teal-300 text-ghayth-dark font-bold px-2 py-0.5 rounded-md">${m.name} (${m.email})</span>`
       ).join('');
@@ -1638,13 +1639,24 @@
         peakBadge.textContent = `🔥 ذروة التوفر: يوم ${bestDay[0]} (${bestDay[1]} متطوع) • فترة ${bestTime[0].split(' ')[0]}`;
       }
 
+      // فلترة تقاطعية تامة بين اللوحات الثلاث (الأيام + الأوقات + المحافظات + اسم المتطوع)
+      let filteredMembers = members.filter(m => {
+        if (availabilityFilters.day && !(m.prefDays || []).includes(availabilityFilters.day)) return false;
+        if (availabilityFilters.time && !(m.prefTimes || []).includes(availabilityFilters.time)) return false;
+        if (availabilityFilters.gov && m.gov !== availabilityFilters.gov) return false;
+        if (availabilityFilters.memberName && m.name !== availabilityFilters.memberName) return false;
+        return true;
+      });
+
+      currentFilteredAvailabilityMembers = filteredMembers;
+
       const daysHtml = DAYS_LIST.map(day => {
         const count = dayCounts[day];
         const pct = Math.round((count / maxDayVal) * 100);
-        const isSelected = selectedAvailabilityFilter.type === 'day' && selectedAvailabilityFilter.value === day;
+        const isSelected = availabilityFilters.day === day;
         return `
-          <div onclick="toggleAvailabilityFilter('day', '${day}')" title="انقر لعرض أسماء المتطوعين المتاحين يوم ${day}"
-               class="p-2 rounded-xl cursor-pointer transition border ${isSelected ? 'bg-teal-50 border-ghayth-teal ring-2 ring-teal-200' : 'border-transparent hover:bg-slate-50'}">
+          <div onclick="toggleAvailabilityFilter('day', '${day}')" title="انقر لتصفية النتائج حسب يوم ${day}"
+               class="p-2 rounded-xl cursor-pointer transition border ${isSelected ? 'bg-teal-50 border-ghayth-teal ring-2 ring-teal-200 shadow-xs' : 'border-transparent hover:bg-slate-50'}">
             <div class="flex justify-between text-xs font-bold mb-1">
               <span class="flex items-center gap-1.5">
                 <span>${day}</span>
@@ -1662,10 +1674,10 @@
       const timesHtml = TIMES_LIST.map(tObj => {
         const count = timeCounts[tObj.label];
         const pct = Math.round((count / maxTimeVal) * 100);
-        const isSelected = selectedAvailabilityFilter.type === 'time' && selectedAvailabilityFilter.value === tObj.label;
+        const isSelected = availabilityFilters.time === tObj.label;
         return `
-          <div onclick="toggleAvailabilityFilter('time', '${tObj.label}')" title="انقر لعرض أسماء المتطوعين في فترة ${tObj.label}"
-               class="p-3 rounded-xl cursor-pointer transition border ${isSelected ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-200' : 'bg-slate-50 border-slate-200 hover:border-amber-400'}">
+          <div onclick="toggleAvailabilityFilter('time', '${tObj.label}')" title="انقر لتصفية النتائج حسب فترة ${tObj.label}"
+               class="p-3 rounded-xl cursor-pointer transition border ${isSelected ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-200 shadow-xs' : 'bg-slate-50 border-slate-200 hover:border-amber-400'}">
             <div class="flex justify-between items-center text-xs font-bold mb-1.5">
               <span class="text-slate-800">${tObj.label}</span>
               <span class="${isSelected ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-900'} px-2 py-0.5 rounded-full">${count} متطوع</span>
@@ -1677,9 +1689,8 @@
         `;
       }).join('');
 
-      // بطاقات المحافظات التفاعلية تحت أوقات التطوع
       const govsHtml = Object.entries(govCounts).map(([govName, count]) => {
-        const isSelected = selectedAvailabilityFilter.type === 'gov' && selectedAvailabilityFilter.value === govName;
+        const isSelected = availabilityFilters.gov === govName;
         return `
           <button type="button" onclick="toggleAvailabilityFilter('gov', '${govName}')"
                   class="px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 ${isSelected ? 'bg-sky-600 text-white border-sky-700 shadow-sm' : (count > 0 ? 'bg-white text-slate-800 border-slate-200 hover:border-sky-400' : 'bg-slate-50 text-slate-400 border-slate-100')}">
@@ -1689,38 +1700,36 @@
         `;
       }).join('');
 
-      let filteredMembers = members;
-      let filterLabel = "جميع المتطوعين المسجلين";
-
-      if (selectedAvailabilityFilter.type === 'day') {
-        filteredMembers = members.filter(m => (m.prefDays || []).includes(selectedAvailabilityFilter.value));
-        filterLabel = `المتطوعون المتاحون يوم (${selectedAvailabilityFilter.value})`;
-      } else if (selectedAvailabilityFilter.type === 'time') {
-        filteredMembers = members.filter(m => (m.prefTimes || []).includes(selectedAvailabilityFilter.value));
-        filterLabel = `المتطوعون المتاحون في فترة (${selectedAvailabilityFilter.value})`;
-      } else if (selectedAvailabilityFilter.type === 'gov') {
-        filteredMembers = members.filter(m => m.gov === selectedAvailabilityFilter.value);
-        filterLabel = `المتطوعون في محافظة (${selectedAvailabilityFilter.value})`;
-      }
-
-      currentFilteredAvailabilityMembers = filteredMembers;
-
+      // قائمة أسماء المتطوعين: النقر على أي اسم يفعّله أو يزيل تفعيله
       const namesListHtml = filteredMembers.length
-        ? filteredMembers.map(m => `
-            <span class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl shadow-2xs">
-              <span class="w-2 h-2 rounded-full bg-ghayth-teal"></span>
-              <span>${m.name}</span>
-            </span>
-          `).join('')
-        : `<span class="text-xs text-slate-400">لا يوجد متطوعون مطابقون لهذا الاختيار حالياً.</span>`;
+        ? filteredMembers.map(m => {
+            const isNameSelected = availabilityFilters.memberName === m.name;
+            return `
+              <span onclick="toggleAvailabilityFilter('memberName', '${m.name}')" title="انقر لتصفية هذا المتطوع"
+                    class="inline-flex items-center gap-1.5 border px-3 py-1.5 rounded-xl shadow-2xs cursor-pointer transition ${isNameSelected ? 'bg-ghayth-teal text-white border-ghayth-dark font-extrabold shadow-sm' : 'bg-white border-slate-200 text-slate-800 font-bold hover:border-teal-400'}">
+                <span class="w-2 h-2 rounded-full ${isNameSelected ? 'bg-amber-300' : 'bg-ghayth-teal'}"></span>
+                <span>${m.name}</span>
+                ${isNameSelected ? '<span class="text-[10px] bg-white/20 px-1 rounded">✓</span>' : ''}
+              </span>
+            `;
+          }).join('')
+        : `<span class="text-xs text-slate-400">لا يوجد متطوعون مطابقون لهذا التقاطع حالياً.</span>`;
 
+      const hasAnyActiveFilter = availabilityFilters.day || availabilityFilters.time || availabilityFilters.gov || availabilityFilters.memberName;
       const emailBtnHtml = (canEditData() && filteredMembers.length > 0)
         ? `<button onclick="openBulkEmailModal()" class="text-[11px] bg-ghayth-teal hover:bg-ghayth-dark text-white font-bold px-3 py-1.5 rounded-lg shadow transition">✉️ إرسال إيميل للمحددين</button>`
         : '';
 
-      const resetBtnHtml = selectedAvailabilityFilter.type
-        ? `<button onclick="toggleAvailabilityFilter(null, null)" class="text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-2.5 py-1.5 rounded-lg transition">✕ عرض الكل</button>`
-        : `<span class="text-[11px] text-slate-400 hidden sm:inline">💡 انقر على أي يوم أو فترة أو محافظة لتصفية الأسماء</span>`;
+      const resetBtnHtml = hasAnyActiveFilter
+        ? `<button onclick="resetAvailabilityFilters()" class="text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-2.5 py-1.5 rounded-lg transition">✕ إلغاء كافة الفلاتر</button>`
+        : `<span class="text-[11px] text-slate-400 hidden sm:inline">💡 انقر على أي يوم أو فترة أو محافظة أو اسم متطوع لتفعيل التفاعل المشترك</span>`;
+
+      let activeSummaryParts = [];
+      if (availabilityFilters.day) activeSummaryParts.push(`يوم: ${availabilityFilters.day}`);
+      if (availabilityFilters.time) activeSummaryParts.push(`فترة: ${availabilityFilters.time}`);
+      if (availabilityFilters.gov) activeSummaryParts.push(`محافظة: ${availabilityFilters.gov}`);
+      if (availabilityFilters.memberName) activeSummaryParts.push(`المتطوع: ${availabilityFilters.memberName}`);
+      const filterLabel = activeSummaryParts.length ? `النتيجة المطابقة (${activeSummaryParts.join(' • ')})` : "جميع المتطوعين المسجلين";
 
       container.innerHTML = `
         <div class="space-y-1.5">
@@ -2834,7 +2843,7 @@
         return matchQ && matchGov && matchLevel;
       });
 
-      // تحديث الخريطة تلقائياً لتطابق نتائج الفرز والبحث
+      // تفاعل خريطة المتطوعين تلقائياً مع الفرز والبحث
       renderVolunteersMap(filtered);
 
       const grid = document.getElementById('members-grid');
