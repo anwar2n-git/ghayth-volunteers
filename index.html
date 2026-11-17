@@ -1471,6 +1471,18 @@
       pushToCloud(extraPayload);
     }
 
+   
+    let selectedAvailabilityFilter = { type: null, value: null };
+
+    function toggleAvailabilityFilter(type, value) {
+      if (selectedAvailabilityFilter.type === type && selectedAvailabilityFilter.value === value) {
+        selectedAvailabilityFilter = { type: null, value: null };
+      } else {
+        selectedAvailabilityFilter = { type, value };
+      }
+      renderAvailabilityAnalytics();
+    }
+
     function renderAvailabilityAnalytics() {
       const container = document.getElementById('availability-analytics-container');
       const peakBadge = document.getElementById('peak-availability-badge');
@@ -1498,14 +1510,19 @@
       const daysHtml = DAYS_LIST.map(day => {
         const count = dayCounts[day];
         const pct = Math.round((count / maxDayVal) * 100);
+        const isSelected = selectedAvailabilityFilter.type === 'day' && selectedAvailabilityFilter.value === day;
         return `
-          <div class="space-y-1">
-            <div class="flex justify-between text-xs font-bold">
-              <span>${day}</span>
+          <div onclick="toggleAvailabilityFilter('day', '${day}')" title="انقر لعرض أسماء المتطوعين المتاحين يوم ${day}"
+               class="p-2 rounded-xl cursor-pointer transition border ${isSelected ? 'bg-teal-50 border-ghayth-teal ring-2 ring-teal-200' : 'border-transparent hover:bg-slate-50'}">
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="flex items-center gap-1.5">
+                <span>${day}</span>
+                ${isSelected ? '<span class="text-[10px] bg-ghayth-teal text-white px-1.5 py-0.5 rounded">محدد</span>' : ''}
+              </span>
               <span class="text-ghayth-teal">${count} متطوع</span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-              <div class="bg-ghayth-teal h-2.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+              <div class="${isSelected ? 'bg-ghayth-dark' : 'bg-ghayth-teal'} h-2.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
             </div>
           </div>
         `;
@@ -1514,11 +1531,13 @@
       const timesHtml = TIMES_LIST.map(tObj => {
         const count = timeCounts[tObj.label];
         const pct = Math.round((count / maxTimeVal) * 100);
+        const isSelected = selectedAvailabilityFilter.type === 'time' && selectedAvailabilityFilter.value === tObj.label;
         return `
-          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+          <div onclick="toggleAvailabilityFilter('time', '${tObj.label}')" title="انقر لعرض أسماء المتطوعين في فترة ${tObj.label}"
+               class="p-3 rounded-xl cursor-pointer transition border ${isSelected ? 'bg-amber-50 border-amber-500 ring-2 ring-amber-200' : 'bg-slate-50 border-slate-200 hover:border-amber-400'}">
             <div class="flex justify-between items-center text-xs font-bold mb-1.5">
               <span class="text-slate-800">${tObj.label}</span>
-              <span class="bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">${count} متطوع</span>
+              <span class="${isSelected ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-900'} px-2 py-0.5 rounded-full">${count} متطوع</span>
             </div>
             <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
               <div class="bg-amber-500 h-2 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
@@ -1527,14 +1546,48 @@
         `;
       }).join('');
 
+      let filteredMembers = members;
+      let filterLabel = "جميع المتطوعين المسجلين";
+
+      if (selectedAvailabilityFilter.type === 'day') {
+        filteredMembers = members.filter(m => (m.prefDays || []).includes(selectedAvailabilityFilter.value));
+        filterLabel = `المتطوعون المتاحون يوم (${selectedAvailabilityFilter.value})`;
+      } else if (selectedAvailabilityFilter.type === 'time') {
+        filteredMembers = members.filter(m => (m.prefTimes || []).includes(selectedAvailabilityFilter.value));
+        filterLabel = `المتطوعون المتاحون في فترة (${selectedAvailabilityFilter.value})`;
+      }
+
+      const namesListHtml = filteredMembers.length
+        ? filteredMembers.map(m => `
+            <span class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-800 text-xs font-bold px-3 py-1.5 rounded-xl shadow-2xs">
+              <span class="w-2 h-2 rounded-full bg-ghayth-teal"></span>
+              <span>${m.name}</span>
+            </span>
+          `).join('')
+        : `<span class="text-xs text-slate-400">لا يوجد متطوعون مسجلون في هذا التوقيت حالياً.</span>`;
+
+      const resetBtnHtml = selectedAvailabilityFilter.type
+        ? `<button onclick="toggleAvailabilityFilter(null, null)" class="text-[11px] bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-2.5 py-1 rounded-lg transition">✕ عرض الكل</button>`
+        : `<span class="text-[11px] text-slate-400">💡 انقر على أي يوم أو فترة زمنية أعلاه لتصفية الأسماء</span>`;
+
       container.innerHTML = `
-        <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-slate-600 uppercase">📅 التوزيع حسب أيام الأسبوع المفضلة</h3>
+        <div class="space-y-1.5">
+          <h3 class="text-xs font-extrabold text-slate-600 uppercase mb-2">📅 التوزيع حسب أيام الأسبوع المفضلة (انقر للتصفية)</h3>
           ${daysHtml}
         </div>
         <div class="space-y-3">
-          <h3 class="text-xs font-extrabold text-slate-600 uppercase">⏰ التوزيع حسب الفترات الزمنية المفضلة</h3>
+          <h3 class="text-xs font-extrabold text-slate-600 uppercase">⏰ التوزيع حسب الفترات الزمنية المفضلة (انقر للتصفية)</h3>
           <div class="grid sm:grid-cols-2 gap-3">${timesHtml}</div>
+        </div>
+        <div class="lg:col-span-2 mt-2 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h4 class="text-xs font-extrabold text-ghayth-dark flex items-center gap-1.5">
+              <span>👥</span>
+              <span>${filterLabel} (${filteredMembers.length}):</span>
+            </h4>
+            ${resetBtnHtml}
+          </div>
+          <div class="flex flex-wrap gap-2">${namesListHtml}</div>
         </div>
       `;
     }
