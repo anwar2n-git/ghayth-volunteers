@@ -136,7 +136,6 @@
       </div>
     </div>
 
-    <!-- الشريط العلوي المبسط -->
     <nav class="bg-black/20 border-t border-white/10">
       <div class="max-w-7xl mx-auto px-4 flex items-center justify-between py-2 text-sm font-bold">
         <div class="flex items-center gap-2 overflow-x-auto">
@@ -202,12 +201,10 @@
     </div>
   </aside>
 
-  <!-- شريط تنبيه للزوار -->
   <div id="readonly-banner" class="bg-amber-50 border-b border-amber-200 text-amber-900 text-xs py-2 px-4 text-center no-print">
     👋 أهلاً بك في منصة <strong>جمعية غيث لأجل الإنسانية</strong>. يمكنك التصفح بحرية، أو تسجيل الدخول بحساب <strong>Google</strong> لتقديم طلب تطوع أو الاستجابة لدعوات المبادرات.
   </div>
 
-  <!-- المحتوى الرئيسي -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
     <!-- 1. لوحة القيادة والتحليل الذكي -->
     <section id="view-dashboard" class="space-y-6">
@@ -234,14 +231,14 @@
         </div>
       </div>
 
-      <!-- لوحة التحليل الذكي التفاعلية بالكامل (اللوحات الثلاث تتفاعل مع بعضها) -->
+      <!-- لوحة التحليل الذكي التفاعلية المتبادلة الكاملة (تخفي الأصفار وتتفاعل كلياً) -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div>
             <h2 class="text-lg font-extrabold text-ghayth-dark flex items-center gap-2">
               <span>📊</span> التحليل الذكي لأيام وأوقات توفر المتطوعين والمحافظات
             </h2>
-            <p class="text-xs text-slate-500">انقر على أي يوم أو فترة زمنية أو محافظة لتتم الفلترة التفاعلية المشتركة مباشرة</p>
+            <p class="text-xs text-slate-500">تتفاعل اللوحات الثلاث تلقائياً عند الضغط وتخفي القيم الصفرية غير المتاحة</p>
           </div>
           <span id="peak-availability-badge" class="text-xs bg-teal-50 text-ghayth-dark border border-teal-200 font-extrabold px-3 py-1.5 rounded-full"></span>
         </div>
@@ -994,7 +991,7 @@
     let tempCapturedCoords = { lat: null, lng: null };
     let activeInvitationsModalInitId = null;
 
-    // حالة الفلاتر التفاعلية المتعددة للوحات التحليل الذكي
+    // حالة الفلاتر التفاعلية المتبادلة للوحات التحليل الذكي
     let availabilityFilters = { day: null, time: null, gov: null, memberName: null };
     let currentFilteredAvailabilityMembers = [];
 
@@ -1521,7 +1518,7 @@
       pushToCloud(extraPayload);
     }
 
-    // تفاعل اللوحات الثلاث مع بعضها في لوحة التحليل الذكي
+    // تفاعل اللوحات الثلاث مع بعضها بالتزامن وإخفاء القيم الصفرية
     function toggleAvailabilityFilter(type, value) {
       if (availabilityFilters[type] === value) {
         availabilityFilters[type] = null;
@@ -1550,7 +1547,7 @@
       if (availabilityFilters.gov) activeFiltersStr.push(`المحافظة: ${availabilityFilters.gov}`);
       const filterTitle = activeFiltersStr.length ? activeFiltersStr.join(' • ') : "جميع المتطوعين";
 
-      document.getElementById('bulk-email-target-label').textContent = `الفلتر الحالي (${filterTitle}) — المستلمون ببريد موثق (${validRecipients.length}):`;
+      document.getElementById('bulk-email-target-label').textContent = `${filterTitle} — المستلمون ببريد موثق (${validRecipients.length}):`;
       document.getElementById('bulk-email-recipients-list').innerHTML = validRecipients.map(m =>
         `<span class="bg-white border border-teal-300 text-ghayth-dark font-bold px-2 py-0.5 rounded-md">${m.name} (${m.email})</span>`
       ).join('');
@@ -1617,17 +1614,44 @@
       const peakBadge = document.getElementById('peak-availability-badge');
       if (!container) return;
 
+      // 1. حساب الإحصائيات التفاعلية بناءً على التقاطع الكامل بين الفلاتر النشطة
+      const baseFilteredForDays = members.filter(m => {
+        if (availabilityFilters.time && !(m.prefTimes || []).includes(availabilityFilters.time)) return false;
+        if (availabilityFilters.gov && m.gov !== availabilityFilters.gov) return false;
+        if (availabilityFilters.memberName && m.name !== availabilityFilters.memberName) return false;
+        return true;
+      });
+
+      const baseFilteredForTimes = members.filter(m => {
+        if (availabilityFilters.day && !(m.prefDays || []).includes(availabilityFilters.day)) return false;
+        if (availabilityFilters.gov && m.gov !== availabilityFilters.gov) return false;
+        if (availabilityFilters.memberName && m.name !== availabilityFilters.memberName) return false;
+        return true;
+      });
+
+      const baseFilteredForGovs = members.filter(m => {
+        if (availabilityFilters.day && !(m.prefDays || []).includes(availabilityFilters.day)) return false;
+        if (availabilityFilters.time && !(m.prefTimes || []).includes(availabilityFilters.time)) return false;
+        if (availabilityFilters.memberName && m.name !== availabilityFilters.memberName) return false;
+        return true;
+      });
+
       const dayCounts = {};
       DAYS_LIST.forEach(d => dayCounts[d] = 0);
+      baseFilteredForDays.forEach(m => {
+        (m.prefDays || []).forEach(d => { if (dayCounts[d] !== undefined) dayCounts[d]++; });
+      });
+
       const timeCounts = {};
       TIMES_LIST.forEach(t => timeCounts[t.label] = 0);
+      baseFilteredForTimes.forEach(m => {
+        (m.prefTimes || []).forEach(t => { if (timeCounts[t] !== undefined) timeCounts[t]++; });
+      });
+
       const govCounts = {};
       COUNTRIES_DATA["سوريا"].forEach(g => govCounts[g] = 0);
-
-      members.forEach(m => {
-        (m.prefDays || []).forEach(d => { if (dayCounts[d] !== undefined) dayCounts[d]++; });
-        (m.prefTimes || []).forEach(t => { if (timeCounts[t] !== undefined) timeCounts[t]++; });
-        if (m.gov) govCounts[m.gov] = (govCounts[m.gov] || 0) + 1;
+      baseFilteredForGovs.forEach(m => {
+        if (m.gov && govCounts[m.gov] !== undefined) govCounts[m.gov] = (govCounts[m.gov] || 0) + 1;
       });
 
       const maxDayVal = Math.max(1, ...Object.values(dayCounts));
@@ -1639,7 +1663,7 @@
         peakBadge.textContent = `🔥 ذروة التوفر: يوم ${bestDay[0]} (${bestDay[1]} متطوع) • فترة ${bestTime[0].split(' ')[0]}`;
       }
 
-      // فلترة تقاطعية تامة بين اللوحات الثلاث (الأيام + الأوقات + المحافظات + اسم المتطوع)
+      // القائمة النهائية للمتطوعين المطابقين لكافة الفلاتر معاً
       let filteredMembers = members.filter(m => {
         if (availabilityFilters.day && !(m.prefDays || []).includes(availabilityFilters.day)) return false;
         if (availabilityFilters.time && !(m.prefTimes || []).includes(availabilityFilters.time)) return false;
@@ -1650,8 +1674,10 @@
 
       currentFilteredAvailabilityMembers = filteredMembers;
 
+      // رسم الأيام (مع إخفاء الأيام التي تساوي 0 بناءً على الفلاتر الأخرى)
       const daysHtml = DAYS_LIST.map(day => {
         const count = dayCounts[day];
+        if (count === 0 && (availabilityFilters.time || availabilityFilters.gov)) return ''; // إخفاء الصفرية عند الفرز
         const pct = Math.round((count / maxDayVal) * 100);
         const isSelected = availabilityFilters.day === day;
         return `
@@ -1671,8 +1697,10 @@
         `;
       }).join('');
 
+      // رسم الأوقات (مع إخفاء الفترات التي تساوي 0)
       const timesHtml = TIMES_LIST.map(tObj => {
         const count = timeCounts[tObj.label];
+        if (count === 0 && (availabilityFilters.day || availabilityFilters.gov)) return '';
         const pct = Math.round((count / maxTimeVal) * 100);
         const isSelected = availabilityFilters.time === tObj.label;
         return `
@@ -1689,18 +1717,19 @@
         `;
       }).join('');
 
+      // رسم المحافظات (إخفاء المحافظات التي تساوي صفر بعد الفرز لتكون اللوحة تفاعلية نظيفة)
       const govsHtml = Object.entries(govCounts).map(([govName, count]) => {
+        if (count === 0 && (availabilityFilters.day || availabilityFilters.time)) return '';
         const isSelected = availabilityFilters.gov === govName;
         return `
           <button type="button" onclick="toggleAvailabilityFilter('gov', '${govName}')"
-                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 ${isSelected ? 'bg-sky-600 text-white border-sky-700 shadow-sm' : (count > 0 ? 'bg-white text-slate-800 border-slate-200 hover:border-sky-400' : 'bg-slate-50 text-slate-400 border-slate-100')}">
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold border transition flex items-center gap-1.5 ${isSelected ? 'bg-sky-600 text-white border-sky-700 shadow-sm' : 'bg-white text-slate-800 border-slate-200 hover:border-sky-400'}">
             <span>📍 ${govName}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[10px] ${isSelected ? 'bg-white text-sky-800' : 'bg-sky-50 text-sky-800'}">${count}</span>
           </button>
         `;
       }).join('');
 
-      // قائمة أسماء المتطوعين: النقر على أي اسم يفعّله أو يزيل تفعيله
       const namesListHtml = filteredMembers.length
         ? filteredMembers.map(m => {
             const isNameSelected = availabilityFilters.memberName === m.name;
@@ -1734,16 +1763,16 @@
       container.innerHTML = `
         <div class="space-y-1.5">
           <h3 class="text-xs font-extrabold text-slate-600 uppercase mb-2">📅 التوزيع حسب أيام الأسبوع المفضلة</h3>
-          ${daysHtml}
+          ${daysHtml || '<p class="text-xs text-slate-400 italic">لا توجد أيام مطابقة</p>'}
         </div>
         <div class="space-y-4">
           <div>
             <h3 class="text-xs font-extrabold text-slate-600 uppercase mb-2.5">⏰ التوزيع حسب الفترات الزمنية المفضلة</h3>
-            <div class="grid sm:grid-cols-2 gap-3">${timesHtml}</div>
+            <div class="grid sm:grid-cols-2 gap-3">${timesHtml || '<p class="text-xs text-slate-400 italic">لا توجد فترات مطابقة</p>'}</div>
           </div>
           <div class="pt-3 border-t border-slate-100">
             <h3 class="text-xs font-extrabold text-slate-600 uppercase mb-2.5">📍 التوزيع التفاعلي حسب المحافظات</h3>
-            <div class="flex flex-wrap gap-2">${govsHtml}</div>
+            <div class="flex flex-wrap gap-2">${govsHtml || '<p class="text-xs text-slate-400 italic">لا توجد محافظات مطابقة</p>'}</div>
           </div>
         </div>
         <div class="lg:col-span-2 mt-1 p-4 rounded-2xl bg-slate-50 border border-slate-200">
@@ -2301,7 +2330,8 @@
             let w = img.width, h = img.height;
             if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
             else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
-            canvas.width = w; canvas.height = h;
+            canvas.width = w;
+            canvas.height = h;
             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
             resolve(canvas.toDataURL('image/jpeg', 0.8));
           };
@@ -2843,7 +2873,6 @@
         return matchQ && matchGov && matchLevel;
       });
 
-      // تفاعل خريطة المتطوعين تلقائياً مع الفرز والبحث
       renderVolunteersMap(filtered);
 
       const grid = document.getElementById('members-grid');
